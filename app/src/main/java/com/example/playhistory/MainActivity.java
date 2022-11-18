@@ -59,8 +59,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     // LISTA DE MONUMENTOS
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
     private ListView monumentosLista;
-    private double[][] arrCoordenadas;
-
+    private Monumento currentMonumento;
 
     // LOCALIZAÇÃO
     private static TextView coordenada;
@@ -74,13 +73,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private EditText distaciaMinima;
     private Tempo tempo = new Tempo();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         init();
     }
+
+
 
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -107,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         monumentosLista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> listView, View itemView, int itemPosition, long itemId) {
                 int idDMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
-                Messages.setDescricao(monumentosObjectList.get(itemPosition).getDescricao());
+                setCurrentMonumento(monumentosObjectList.get(itemPosition));
                 setMidia(String.valueOf(idDMonumento));
                 if (idDMonumento == 0) {
                     inserirMonumentos();
@@ -116,13 +116,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         });
     }
 
-    public void setMidia (String position) {
-        if (!position.equals("0")) {
+    public void setCurrentMonumento(Monumento currentMonumento) {
+        this.currentMonumento = currentMonumento;
+    }
+
+    public void setMidia (String idDocumento) {
+        if (!idDocumento.equals("0")) {
             try {
                 audio.reset();
             } catch (Exception ex ) {}
             resetPlayer();
-            currentUrl=host+"audioDescricao.php?idDocumento="+position;
+            currentUrl=host+"audioDescricao.php?idDocumento="+idDocumento;
             audio = new AudioController(this,this.currentUrl);
             playAudio();
         } else {
@@ -139,6 +143,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Runnable updateProgress = () -> {
             Intent intent = new Intent(this, Messages.class);
             startActivity(intent);
+            Messages.setDescricao(currentMonumento.getNome(),currentMonumento.getDescricao());
             do {
                 try {
                     float percent = audio.getPercent();
@@ -293,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         menorDistanciaMonumento.setVisitado(true);
                         monumentosObjectList.set(menorDistanciaMonumentoIndex,menorDistanciaMonumento);
                         setMidia(String.valueOf(menorDistanciaMonumento.getIdMonumento()));
+                        setCurrentMonumento(menorDistanciaMonumento);
                     }
                 } else {
                     coordenada.setText("Sem dados suficientes para cálculo");

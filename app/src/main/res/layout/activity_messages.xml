@@ -19,16 +19,17 @@
         app:srcCompat="@android:drawable/ic_media_pause" />
 
     <ScrollView
-        android:layout_width="315dp"
-        android:layout_height="556dp"
+        android:id="@+id/scrollView2"
+        android:layout_width="328dp"
+        android:layout_height="600dp"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toTopOf="@+id/pausarDescricao"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/textView3"
+        app:layout_constraintVertical_bias="0.0">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -38,9 +39,10 @@
             <TextView
                 android:id="@+id/descricao"
                 android:layout_width="match_parent"
-                android:layout_height="1020dp"
+                android:layout_height="800dp"
                 android:text="TextView"
                 android:textSize="24sp" />
         </LinearLayout>
     </ScrollView>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

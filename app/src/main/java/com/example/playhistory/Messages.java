@@ -10,6 +10,8 @@ import com.example.playhistory.controller.AudioController;
 import com.example.playhistory.controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.Locale;
+
 public class Messages extends AppCompatActivity {
 
     public Tempo tempo = new Tempo();
@@ -33,8 +35,8 @@ public class Messages extends AppCompatActivity {
         });
     }
 
-    public static void setDescricao(String descricao) {
-        Messages.descricao = descricao;
+    public static void setDescricao(String nome,String descricao) {
+        Messages.descricao = nome.toUpperCase(Locale.ROOT)+"\n\n"+descricao;
     }
 
     private Runnable runMidia = () -> {
