@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="moonstone_blue">#66A9BC</color>
+    <color name="metallic_blue">#364883</color>
+    <color name="shadow_blue">#6F88A5</color>
+    <color name="brown_yellow">#c98a6a</color>
+    <color name="deep_puce">#A85A64</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
