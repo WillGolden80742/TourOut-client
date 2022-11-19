@@ -20,8 +20,8 @@
 
     <ScrollView
         android:id="@+id/scrollView2"
-        android:layout_width="328dp"
-        android:layout_height="600dp"
+        android:layout_width="335dp"
+        android:layout_height="609dp"
         android:layout_marginStart="20dp"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"

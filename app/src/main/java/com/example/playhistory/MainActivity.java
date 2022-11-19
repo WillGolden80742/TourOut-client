@@ -1,5 +1,4 @@
 package com.example.playhistory;
-
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -17,7 +16,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-
 import android.os.StrictMode;
 import android.text.TextUtils;
 import android.view.View;
@@ -89,8 +87,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        getLocationPermission ();
-        getStoragePermission();
+        getPermissions ();
         buttonAudio = findViewById(R.id.playAudio);
         seekMusic = findViewById(R.id.seekAudio);
         urlInput = findViewById(R.id.urlInput);
@@ -281,23 +278,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         monumentosLista.setAdapter(adapter);
     }
 
-    public void getStoragePermission () {
-        String[] permissionsStorage = {Manifest.permission.READ_EXTERNAL_STORAGE};
-        int requestExternalStorage = 1;
-        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage);
-        }
-    }
-
     @SuppressLint("NewApi")
-    public void getLocationPermission () {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+    public void getPermissions () {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
             ActivityResultLauncher<String[]> locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
                         Boolean coarseLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_COARSE_LOCATION,false);
+                        Boolean readExternalStorage = result.getOrDefault(
+                        Manifest.permission.READ_EXTERNAL_STORAGE,false);
+                        Boolean writeExternalStorage = result.getOrDefault(
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE,false);
                         if (fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted) {
                             setLocationManager();
                         } else {
@@ -307,6 +299,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             );
 
             locationPermissionRequest.launch(new String[] {
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             });
