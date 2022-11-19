@@ -40,7 +40,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     // LISTA DE MONUMENTOS
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
+    private Map<Integer, Boolean> visitado = new HashMap<Integer, Boolean>();
     private ListView monumentosLista;
     private Monumento currentMonumento;
     // LOCALIZAÇÃO
@@ -71,8 +74,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     // CALCULO DO MONUMENTO MAIS PROXIMO
-    private Monumento menorDistanciaMonumento = new Monumento();
-    private int menorDistanciaMonumentoIndex = 0;
+    private Monumento monumentoMaisProximo = new Monumento();
+    private int monumentoMaisProximoIndex = 0;
     private double menorDistancia, currentLat,currentLong;
     private EditText distaciaMinima;
     private Tempo tempo = new Tempo();
@@ -89,15 +92,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+        inserirMonumentos();
+        new Thread(reiniciarVisitados).start();
         getPermissions ();
         buttonAudio = findViewById(R.id.playAudio);
         seekMusic = findViewById(R.id.seekAudio);
         urlInput = findViewById(R.id.urlInput);
         coordenada = findViewById(R.id.coordenada);
         distaciaMinima = findViewById(R.id.metroNumber);
-        inserirMonumentos();
         setListener();
-        new Thread(reiniciarVisitados).start();
     }
 
     public void setListener() {
@@ -352,8 +355,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         double distancia = dist;
         if (distancia < menorDistancia) {
             menorDistancia = distancia;
-            menorDistanciaMonumento = m;
-            menorDistanciaMonumentoIndex = index;
+            monumentoMaisProximo = m;
+            monumentoMaisProximoIndex = index;
         }
     }
 
@@ -367,18 +370,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         calculaDistancia(index,m, currentLat, currentLong);
                         index++;
                     }
-                    coordenada.setText(menorDistanciaMonumento.getNome() + "\n à " + (int)(menorDistancia * 1000) + " metros");
+                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int)(menorDistancia * 1000) + " metros");
                     int distaciaMinimaInt;
                     try {
                         distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
                     } catch (Exception ex ) {
                         distaciaMinimaInt = 0;
                     }
-                    if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !menorDistanciaMonumento.isVisitado()) {
-                        menorDistanciaMonumento.setVisitado(true);
-                        monumentosObjectList.set(menorDistanciaMonumentoIndex,menorDistanciaMonumento);
-                        reproduzirAudioDescricao(String.valueOf(menorDistanciaMonumento.getIdMonumento()));
-                        setCurrentMonumento(menorDistanciaMonumento);
+                    if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento())) {
+                        visitado.put(monumentoMaisProximo.getIdMonumento(),true);
+                        monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
+                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
+                        setCurrentMonumento(monumentoMaisProximo);
                     }
                 } else {
                     coordenada.setText("Sem dados suficientes para cálculo");
@@ -395,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         while (true) {
             int i = 0;
             for (Monumento m : monumentosObjectList) {
-                m.setVisitado(false);
+                visitado.put(m.getIdMonumento(),false);
                 monumentosObjectList.set(i, m);
                 i++;
             }

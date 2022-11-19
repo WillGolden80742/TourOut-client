@@ -6,15 +6,6 @@ public class Monumento {
     private String descricao;
     private double latitude;
     private double longitude;
-    private boolean visitado = false;
-
-    public boolean isVisitado() {
-        return visitado;
-    }
-
-    public void setVisitado(boolean visitado) {
-        this.visitado = visitado;
-    }
 
     public int getIdMonumento() {
         return idMonumento;
