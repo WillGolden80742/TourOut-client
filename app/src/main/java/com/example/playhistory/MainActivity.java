@@ -271,7 +271,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             audio = new AudioController(this, this.currentUrl);
         }
         baixadasAudioDescricoes=true;
-        audio.reset();
         String coordenadaText = String.valueOf(coordenada.getText());
         coordenada.setText("Audiodescrições baixadas");
         try {
