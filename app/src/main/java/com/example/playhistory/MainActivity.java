@@ -377,7 +377,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !menorDistanciaMonumento.isVisitado()) {
                         menorDistanciaMonumento.setVisitado(true);
                         monumentosObjectList.set(menorDistanciaMonumentoIndex,menorDistanciaMonumento);
-                        setMidia(String.valueOf(menorDistanciaMonumento.getIdMonumento()));
+                        reproduzirAudioDescricao(String.valueOf(menorDistanciaMonumento.getIdMonumento()));
                         setCurrentMonumento(menorDistanciaMonumento);
                     }
                 } else {
