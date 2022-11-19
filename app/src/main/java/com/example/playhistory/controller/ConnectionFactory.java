@@ -24,7 +24,7 @@ public class ConnectionFactory {
     }
 
 
-    public String getHTML(String urlToRead) {
+    public String getContent(String urlToRead) {
         StringBuilder result = new StringBuilder();
         try {
             URL url = new URL(urlToRead);
@@ -46,8 +46,8 @@ public class ConnectionFactory {
         return result.toString();
     }
 
-    public byte[] getHTMLBytes () {
-        return getHTMLBytes (this.url);
+    public byte[] getContentBytes () {
+        return getContentBytes (this.url);
     }
 
     public static byte[] inputStreamToByte(InputStream is) {
@@ -67,12 +67,12 @@ public class ConnectionFactory {
         return null;
     }
 
-    public byte[] getHTMLBytes (String urlToRead) {
-        URL htmlUrl = null;//w w  w  .  jav  a  2s  .c om
+    public byte[] getContentBytes (String urlToRead) {
+        URL contentUrl = null;//w w  w  .  jav  a  2s  .c om
         InputStream inStream = null;
         try {
-            htmlUrl = new URL(urlToRead);
-            URLConnection connection = htmlUrl.openConnection();
+            contentUrl = new URL(urlToRead);
+            URLConnection connection = contentUrl.openConnection();
             HttpURLConnection httpConnection = (HttpURLConnection) connection;
             int responseCode = httpConnection.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK) {
@@ -87,13 +87,13 @@ public class ConnectionFactory {
         return data;
     }
 
-    public String getHTML () {
-        return getHTML (this.url);
+    public String getContent () {
+        return getContent (this.url);
     }
 
 
     public JSONObject jsonSearch (String jsonQuery) {
-        String content = getHTML();
+        String content = getContent();
         return jsonSearch (content,jsonQuery);
     }
 

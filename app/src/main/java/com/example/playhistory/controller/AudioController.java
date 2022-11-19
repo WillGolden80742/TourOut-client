@@ -34,7 +34,7 @@ public class AudioController {
     }
 
     private Runnable downloadMidia = () -> {
-        writeToFile(fileName,connection.getHTMLBytes());
+        writeToFile(fileName,connection.getContentBytes());
     };
 
     public void writeToFile(String fileName, byte[] content){

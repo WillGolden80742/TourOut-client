@@ -1,10 +1,4 @@
 package com.example.playhistory;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -25,12 +19,19 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SeekBar;
-import android.widget.TextView;;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 import com.example.playhistory.controller.AudioController;
 import com.example.playhistory.controller.Cache;
 import com.example.playhistory.controller.ConnectionFactory;
-
 import com.example.playhistory.controller.Monumento;
 import com.example.playhistory.controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -41,6 +42,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity implements LocationListener {
@@ -57,12 +59,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static AudioController audio;
     private static Thread progress;
     private static boolean isPlaying = false;
+    private boolean baixadasAudioDescricoes = false;
 
     // LISTA DE MONUMENTOS
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
     private ListView monumentosLista;
     private Monumento currentMonumento;
-
     // LOCALIZAÇÃO
     private static TextView coordenada;
     private LocationManager locationManager;
@@ -235,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         Monumento m = new Monumento();
                         m.setIdMonumento(jsonArr.getJSONObject(k).getInt("idMonumento"));
                         m.setNome(k);
-                        m.setLatidade(jsonArr.getJSONObject(k).getDouble("latitude"));
+                        m.setLatitude(jsonArr.getJSONObject(k).getDouble("latitude"));
                         m.setLongitude(jsonArr.getJSONObject(k).getDouble("longitude"));
                         m.setDescricao(jsonArr.getJSONObject(k).getString("descricao"));
                         monumentosObjectList.add(m);
@@ -247,6 +249,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (cont.get() == 0) {
                     setNullResult();
                     monumentos="Nenhum Monumento encontrado";
+                } else {
+                    if (!baixadasAudioDescricoes) {
+                        new Thread(baixarAudioDescricaoDeMonumentos).start();
+                    }
                 }
             }
         } catch (NullPointerException ex) {
@@ -258,6 +264,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         return monumentos.split(",");
     }
+
+    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
+        for (Monumento m : monumentosObjectList) {
+            currentUrl = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+            audio = new AudioController(this, this.currentUrl);
+        }
+        baixadasAudioDescricoes=true;
+        audio.reset();
+        String coordenadaText = String.valueOf(coordenada.getText());
+        coordenada.setText("Audiodescrições baixadas");
+        try {
+            Thread.sleep(tempo.segundo*2);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        coordenada.setText(coordenadaText);
+    };
 
     private void setNullResult () {
         Monumento m = new Monumento();
@@ -281,6 +304,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @SuppressLint("NewApi")
     public void getPermissions () {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
+            String url=host+"permissoes.php?nome=permissoes";
+            audio = new AudioController(this,url);
+            audio.play();
             ActivityResultLauncher<String[]> locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
@@ -315,12 +341,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private void calculaDistancia(int index,Monumento m, double lat2, double lng2) {
         double earthRadius = 6371;//kilometers
-        double dLat = Math.toRadians(lat2 - m.getLatidade());
+        double dLat = Math.toRadians(lat2 - m.getLatitude());
         double dLng = Math.toRadians(lng2 - m.getLongitude());
         double sindLat = Math.sin(dLat / 2);
         double sindLng = Math.sin(dLng / 2);
         double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
-                * Math.cos(Math.toRadians(m.getLatidade()))
+                * Math.cos(Math.toRadians(m.getLatitude()))
                 * Math.cos(Math.toRadians(lat2));
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         double dist = earthRadius * c;
@@ -359,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     coordenada.setText("Sem dados suficientes para cálculo");
                 }
                 try {
-                    new Thread().sleep(tempo.minuto*2);
+                    new Thread().sleep(tempo.segundo*10);
                 } catch (InterruptedException e) {
                     System.exit(0);
                 }

@@ -53,7 +53,7 @@ public class Cache extends ConnectionFactory {
 
 
     private Runnable downloadMidia = () -> {
-        writeToFile(fileName,getHTMLBytes());
+        writeToFile(fileName,getContentBytes());
     };
 
     public void writeToFile(String fileName, byte[] content){

@@ -4,8 +4,7 @@ public class Monumento {
     private int idMonumento;
     private String nome;
     private String descricao;
-    private Byte[] audioDescricao;
-    private double latidade;
+    private double latitude;
     private double longitude;
     private boolean visitado = false;
 
@@ -41,20 +40,12 @@ public class Monumento {
         this.descricao = descricao;
     }
 
-    public Byte[] getAudioDescricao() {
-        return audioDescricao;
+    public double getLatitude() {
+        return latitude;
     }
 
-    public void setAudioDescricao(Byte[] audioDescricao) {
-        this.audioDescricao = audioDescricao;
-    }
-
-    public double getLatidade() {
-        return latidade;
-    }
-
-    public void setLatidade(double latidade) {
-        this.latidade = latidade;
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
     }
 
     public double getLongitude() {
