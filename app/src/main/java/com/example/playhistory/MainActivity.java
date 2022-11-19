@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     inserirMonumentos();
                 } else {
                     setCurrentMonumento(monumentosObjectList.get(itemPosition));
-                    setMidia(String.valueOf(idDMonumento));
+                    reproduzirAudioDescricao(String.valueOf(idDMonumento));
                 }
             }
         });
@@ -148,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         this.currentMonumento = currentMonumento;
     }
 
-    public void setMidia (String idDocumento) {
+    public void reproduzirAudioDescricao (String idDocumento) {
         if (!idDocumento.equals("0")) {
             try {
                 audio.reset();
