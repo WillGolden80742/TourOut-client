@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 
 import android.os.StrictMode;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -29,6 +30,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;;
 
 import com.example.playhistory.controller.AudioController;
+import com.example.playhistory.controller.Cache;
 import com.example.playhistory.controller.ConnectionFactory;
 
 import com.example.playhistory.controller.Monumento;
@@ -40,12 +42,14 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     // SERVIDOR
     private static String host = "https://desmatamenos.website/";
+    private Cache cache;
 
     // PLAYER DE AUDIO
     FloatingActionButton buttonAudio;
@@ -85,7 +89,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-        getLocationPermition ();
+        getLocationPermission ();
+        getStoragePermission();
         buttonAudio = findViewById(R.id.playAudio);
         seekMusic = findViewById(R.id.seekAudio);
         urlInput = findViewById(R.id.urlInput);
@@ -100,19 +105,43 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         buttonAudio.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                playAudio();
+                new Thread(playAudio).start();
             }
         });
 
         monumentosLista.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> listView, View itemView, int itemPosition, long itemId) {
                 int idDMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
-                setCurrentMonumento(monumentosObjectList.get(itemPosition));
-                setMidia(String.valueOf(idDMonumento));
                 if (idDMonumento == 0) {
+                    urlInput.setQuery("",false);
+                    urlInput.clearFocus();
                     inserirMonumentos();
+                } else {
+                    setCurrentMonumento(monumentosObjectList.get(itemPosition));
+                    setMidia(String.valueOf(idDMonumento));
                 }
             }
+        });
+
+        urlInput.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                callSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (TextUtils.isEmpty(newText)) {
+                    callSearch(newText);
+                }
+                return true;
+            }
+
+            public void callSearch(String query) {
+                inserirMonumentos(listaDeMonumentos(query));
+            }
+
         });
     }
 
@@ -128,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             resetPlayer();
             currentUrl=host+"audioDescricao.php?idDocumento="+idDocumento;
             audio = new AudioController(this,this.currentUrl);
-            playAudio();
+            new Thread(playAudio).start();
         } else {
             coordenada.setText("Nenhum arquivo de voz encontrado");
         }
@@ -160,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     };
 
 
-    private void playAudio() {
+    private final Runnable playAudio = () -> {
         if (isPlaying) {
             audio.pause();
             isPlaying = false;
@@ -170,23 +199,39 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     audio.play();
                     progress = new Thread(updateProgress);
                     progress.start();
-                    isPlaying = true;
                     buttonAudio.setImageResource(android.R.drawable.ic_media_pause);
+                    isPlaying = true;
                 } catch (Exception ex) {
                     urlInput.setQuery("Erro",false);
                 }
             }
         }
-    }
+    };
+
 
     private String monumentos;
-    private String[] listaDeMonumentos () {
-        ConnectionFactory connection = new ConnectionFactory( host+"monumentos.php");
-        JSONObject jsonArr = connection.jsonSearch("Monumentos");
+    private String[] listaDeMonumentos (String query) {
+
+        String url = host+"monumentos.php?nome="+query;
+        String fileName = "listaDeMonumentos.json";
+        ConnectionFactory connection = new ConnectionFactory(url);
+
+        JSONObject jsonArr;
+        if (query.equals("")) {
+            cache = new Cache(url);
+            if (cache.getCache(fileName) == "NOT_FOUND") {
+                cache.setCache(fileName);
+            }
+            jsonArr = connection.jsonSearchByCache(fileName,"Monumentos");
+        } else {
+            jsonArr = connection.jsonSearch("Monumentos");
+        }
+
         monumentosObjectList = new ArrayList<>();
         monumentos = "";
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                AtomicInteger cont = new AtomicInteger();
                 jsonArr.keys().forEachRemaining(k -> {
                     monumentos+=k+",";
                     try {
@@ -197,36 +242,56 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         m.setLongitude(jsonArr.getJSONObject(k).getDouble("longitude"));
                         m.setDescricao(jsonArr.getJSONObject(k).getString("descricao"));
                         monumentosObjectList.add(m);
+                        cont.getAndIncrement();
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 });
+                if (cont.get() == 0) {
+                    setNullResult();
+                    monumentos="Nenhum Monumento encontrado";
+                }
             }
         } catch (NullPointerException ex) {
-            Monumento m = new Monumento();
-            m.setNome("");
-            m.setIdMonumento(0);
-            monumentosObjectList.add(m);
+            setNullResult();
             monumentos = "Verifique sua conexão com a internet";
         } catch (Exception ex) {
-            Monumento m = new Monumento();
-            m.setNome("");
-            m.setIdMonumento(0);
-            monumentosObjectList.add(m);
+            setNullResult();
             monumentos = String.valueOf(ex);
         }
         return monumentos.split(",");
     }
 
+    private void setNullResult () {
+        Monumento m = new Monumento();
+        m.setNome("");
+        m.setIdMonumento(0);
+        monumentosObjectList.add(m);
+    }
+
+
     public void inserirMonumentos () {
+        inserirMonumentos (listaDeMonumentos(""));
+    }
+
+    public void inserirMonumentos (String[] monumentos) {
         monumentosLista = (ListView) findViewById(R.id.monumentosLista);
-        String[] dados = listaDeMonumentos();
+        String[] dados = monumentos;
         ArrayAdapter<String>  adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dados);
         monumentosLista.setAdapter(adapter);
     }
 
+    public void getStoragePermission () {
+        String[] permissionsStorage = {Manifest.permission.READ_EXTERNAL_STORAGE};
+        int requestExternalStorage = 1;
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, permissionsStorage, requestExternalStorage);
+        }
+    }
+
     @SuppressLint("NewApi")
-    public void getLocationPermition () {
+    public void getLocationPermission () {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityResultLauncher<String[]> locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(

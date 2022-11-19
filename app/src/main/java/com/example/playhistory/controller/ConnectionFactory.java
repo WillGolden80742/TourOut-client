@@ -4,12 +4,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.net.URLConnection;
 
 public class ConnectionFactory {
     private String url;
@@ -18,8 +23,6 @@ public class ConnectionFactory {
         this.url = url;
     }
 
-    public ConnectionFactory() {
-    }
 
     public String getHTML(String urlToRead) {
         StringBuilder result = new StringBuilder();
@@ -43,21 +46,59 @@ public class ConnectionFactory {
         return result.toString();
     }
 
+    public byte[] getHTMLBytes () {
+        return getHTMLBytes (this.url);
+    }
+
+    public static byte[] inputStreamToByte(InputStream is) {
+        try {
+            ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+            int ch;
+            while ((ch = is.read()) != -1) {
+                bytestream.write(ch);
+            }
+            byte imgdata[] = bytestream.toByteArray();
+            bytestream.close();
+            return imgdata;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public byte[] getHTMLBytes (String urlToRead) {
+        URL htmlUrl = null;//w w  w  .  jav  a  2s  .c om
+        InputStream inStream = null;
+        try {
+            htmlUrl = new URL(urlToRead);
+            URLConnection connection = htmlUrl.openConnection();
+            HttpURLConnection httpConnection = (HttpURLConnection) connection;
+            int responseCode = httpConnection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                inStream = httpConnection.getInputStream();
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] data = inputStreamToByte(inStream);
+        return data;
+    }
+
     public String getHTML () {
         return getHTML (this.url);
     }
 
+
     public JSONObject jsonSearch (String jsonQuery) {
-        return jsonSearch (this.url,jsonQuery);
+        String content = getHTML();
+        return jsonSearch (content,jsonQuery);
     }
 
-    public JSONObject jsonSearch (String urlToRead, String jsonQuery) {
-        String json = "";
-        try {
-            json = getHTML(urlToRead);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public JSONObject jsonSearch (String content, String jsonQuery) {
+        String json = content;
         String[] query = jsonQuery.split(":");
         JSONObject jsonResult = null;
         try {
@@ -68,7 +109,7 @@ public class ConnectionFactory {
                     jsonResult = new JSONObject(jsonResult.toString()).getJSONObject(query[contQuery]);
                     contQuery++;
                 }
-            } catch (org.json.JSONException ex) {
+            } catch (JSONException ex) {
                 if (ex.toString().contains("not found")) {
                     jsonResult = null;
                 } else {
@@ -80,6 +121,36 @@ public class ConnectionFactory {
         }
         return jsonResult;
     }
+
+
+    public JSONObject jsonSearchByCache (String fileName,String jsonQuery)  {
+        File file = new File(new Cache().getCache(fileName));
+        if (file.exists()) {
+            try {
+                return jsonSearchByCache(file, this.url, jsonQuery);
+            } catch (JSONException e) {
+                return jsonSearch(jsonQuery);
+            }
+        } else {
+            return jsonSearch(jsonQuery);
+        }
+    }
+
+    public JSONObject jsonSearchByCache (File file,String urlToRead, String jsonQuery) throws JSONException {
+        StringBuilder text = new StringBuilder("");
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String line = "";
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+            br.close();
+            return jsonSearch (String.valueOf(text),jsonQuery);
+        } catch (IOException e) {
+            return jsonSearch (jsonQuery);
+        }
+    }
+
 
 
 }

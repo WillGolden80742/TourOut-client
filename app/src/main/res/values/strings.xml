@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PlayHistory</string>
+    <string name="app_name">TourOut</string>
     <string name="coordenada">Localizando monumento mais próximo ...</string>
     <string name="pesquisa"></string>
     <string name="metro">200</string>
