@@ -8,20 +8,21 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class Cache {
-    
-    private ConnectionFactory connection;
+public class Cache extends ConnectionFactory {
+
     public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Cache/";
     private String fileName;
     private File path;
     private String url;
 
     public Cache (String url) {
+        super(url);
         this.url = url;
+
     }
 
     public Cache () {
-
+        super(null);
     }
 
     public void fileHashed(String fileName) {
@@ -31,7 +32,6 @@ public class Cache {
     }
 
     public void setCache (String fileName) {
-        connection = new ConnectionFactory(url);
         fileHashed(fileName);
         this.path = new File(localDeArmazenamento+this.fileName);
         if (!path.exists()) {
@@ -53,7 +53,7 @@ public class Cache {
 
 
     private Runnable downloadMidia = () -> {
-        writeToFile(fileName,connection.getHTMLBytes());
+        writeToFile(fileName,getHTMLBytes());
     };
 
     public void writeToFile(String fileName, byte[] content){

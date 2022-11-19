@@ -359,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     coordenada.setText("Sem dados suficientes para cálculo");
                 }
                 try {
-                    new Thread().sleep(tempo.segundo*1);
+                    new Thread().sleep(tempo.minuto*2);
                 } catch (InterruptedException e) {
                     System.exit(0);
                 }
