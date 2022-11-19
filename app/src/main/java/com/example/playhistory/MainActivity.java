@@ -286,10 +286,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
                         Boolean coarseLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_COARSE_LOCATION,false);
-                        Boolean readExternalStorage = result.getOrDefault(
-                        Manifest.permission.READ_EXTERNAL_STORAGE,false);
-                        Boolean writeExternalStorage = result.getOrDefault(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE,false);
                         if (fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted) {
                             setLocationManager();
                         } else {

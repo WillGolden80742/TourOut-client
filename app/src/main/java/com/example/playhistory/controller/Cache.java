@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 public class Cache {
     
     private ConnectionFactory connection;
-    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Cache5/";
+    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Cache/";
     private String fileName;
     private File path;
     private String url;
