@@ -28,9 +28,9 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.example.playhistory.controller.AudioController;
-import com.example.playhistory.controller.Cache;
-import com.example.playhistory.controller.ConnectionFactory;
+import com.example.playhistory.controller.Audio;
+import com.example.playhistory.Model.Cache;
+import com.example.playhistory.Model.ConnectionFactory;
 import com.example.playhistory.controller.Monumento;
 import com.example.playhistory.controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     SearchView urlInput;
     String currentUrl = "";
     private static SeekBar seekMusic;
-    private static AudioController audio;
+    private static Audio audio;
     private static Thread progress;
     private static boolean isPlaying = false;
     private boolean baixadasAudioDescricoes = false;
@@ -71,9 +71,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static TextView coordenada;
     private LocationManager locationManager;
 
-
     // CALCULO DO MONUMENTO MAIS PROXIMO
-    private Monumento monumentoMaisProximo = new Monumento();
+    private Monumento monumentoMaisProximo;
     private int monumentoMaisProximoIndex = 0;
     private double menorDistancia, currentLat, currentLong;
     private EditText distaciaMinima;
@@ -119,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 } else {
                     setCurrentMonumento(monumentosObjectList.get(itemPosition));
                     reproduzirAudioDescricao(String.valueOf(idDMonumento));
-                    setMessage();
+                    setMessage(currentMonumento);
                 }
             }
         });
@@ -150,10 +149,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         this.currentMonumento = currentMonumento;
     }
 
-    private void setMessage(){
+    private void setMessage(Monumento m){
         Intent intent = new Intent(this, Messages.class);
         startActivity(intent);
-        Messages.setDescricao(currentMonumento.getNome(),currentMonumento.getDescricao());
+        Messages.setDescricao(m.getNome(),m.getDescricao());
     }
 
     public void reproduzirAudioDescricao (String idDocumento) {
@@ -163,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             } catch (Exception ex ) {}
             resetPlayer();
             currentUrl=host+"audioDescricao.php?idDocumento="+idDocumento;
-            audio = new AudioController(this,this.currentUrl);
+            audio = new Audio(this,this.currentUrl);
             new Thread(playAudio).start();
         } else {
             coordenada.setText("Nenhum arquivo de voz encontrado");
@@ -274,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         int cont = 0;
         for (Monumento m : monumentosObjectList) {
             String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-            audio = new AudioController(this,url);
+            audio = new Audio(this,url);
             cont++;
         }
         baixadasAudioDescricoes=true;
@@ -313,7 +312,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void getPermissions () {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
             String url=host+"permissoes.php?nome=permissoes";
-            audio = new AudioController(this,url);
+            audio = new Audio(this,url);
             audio.play();
             ActivityResultLauncher<String[]> locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
@@ -393,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
                             reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                             setCurrentMonumento(monumentoMaisProximo);
+                            setMessage(currentMonumento);
                         }
                     } else {
                         coordenada.setText("Todo monumentos foram visitado!");

@@ -1,4 +1,4 @@
-package com.example.playhistory.controller;
+package com.example.playhistory.Model;
 
 import org.json.JSONException;
 import org.json.JSONObject;

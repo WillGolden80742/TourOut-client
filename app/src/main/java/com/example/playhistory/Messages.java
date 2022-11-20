@@ -6,7 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.playhistory.controller.AudioController;
+import com.example.playhistory.controller.Audio;
 import com.example.playhistory.controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -30,7 +30,7 @@ public class Messages extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 finish();
-                new AudioController().pause();
+                new Audio().pause();
             }
         });
     }
@@ -47,7 +47,7 @@ public class Messages extends AppCompatActivity {
             } catch (InterruptedException e) {
                 System.exit(0);
             }
-        } while (new AudioController().isPlaying());
+        } while (new Audio().isPlaying());
         finish();
     };
 }

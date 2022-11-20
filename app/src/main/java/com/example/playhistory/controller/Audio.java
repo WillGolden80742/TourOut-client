@@ -3,12 +3,15 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
+
+import com.example.playhistory.Model.ConnectionFactory;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 
-public class AudioController {
+public class Audio {
     private static MediaPlayer mediaPlayer = new MediaPlayer();
     private ConnectionFactory connection;
     private final String padraoNomeArquivo = "audio_descricao_";
@@ -16,7 +19,7 @@ public class AudioController {
     private String fileName;
     private File file;
 
-    public AudioController(Context context, String url) {
+    public Audio(Context context, String url) {
         connection = new ConnectionFactory(url);
         fileName = padraoNomeArquivo+url.split("=")[1]+".mp3";
         file = new File(localDeArmazenamento+fileName);
@@ -29,7 +32,7 @@ public class AudioController {
     }
 
 
-    public AudioController() {
+    public Audio() {
 
     }
 

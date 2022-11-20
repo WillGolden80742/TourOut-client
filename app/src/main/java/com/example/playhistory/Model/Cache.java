@@ -1,5 +1,7 @@
-package com.example.playhistory.controller;
+package com.example.playhistory.Model;
 import android.os.Environment;
+
+import com.example.playhistory.Model.ConnectionFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
