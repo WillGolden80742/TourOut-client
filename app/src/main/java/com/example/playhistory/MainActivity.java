@@ -20,7 +20,6 @@ import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -76,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     // CALCULO DO MONUMENTO MAIS PROXIMO
     private Monumento monumentoMaisProximo = new Monumento();
     private int monumentoMaisProximoIndex = 0;
-    private double menorDistancia, currentLat,currentLong;
+    private double menorDistancia, currentLat, currentLong;
     private EditText distaciaMinima;
     private Tempo tempo = new Tempo();
 
@@ -88,13 +87,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
 
-
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
         inserirMonumentos();
         new Thread(reiniciarVisitados).start();
-        getPermissions ();
+        getPermissions();
         buttonAudio = findViewById(R.id.playAudio);
         seekMusic = findViewById(R.id.seekAudio);
         urlInput = findViewById(R.id.urlInput);
@@ -115,12 +113,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             public void onItemClick(AdapterView<?> listView, View itemView, int itemPosition, long itemId) {
                 int idDMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
                 if (idDMonumento == 0) {
-                    urlInput.setQuery("",false);
+                    urlInput.setQuery("", false);
                     urlInput.clearFocus();
                     inserirMonumentos();
                 } else {
                     setCurrentMonumento(monumentosObjectList.get(itemPosition));
                     reproduzirAudioDescricao(String.valueOf(idDMonumento));
+                    setMessage();
                 }
             }
         });
@@ -151,6 +150,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         this.currentMonumento = currentMonumento;
     }
 
+    private void setMessage(){
+        Intent intent = new Intent(this, Messages.class);
+        startActivity(intent);
+        Messages.setDescricao(currentMonumento.getNome(),currentMonumento.getDescricao());
+    }
+
     public void reproduzirAudioDescricao (String idDocumento) {
         if (!idDocumento.equals("0")) {
             try {
@@ -172,9 +177,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @SuppressLint("NewApi")
     private Runnable updateProgress = () -> {
-            Intent intent = new Intent(this, Messages.class);
-            startActivity(intent);
-            Messages.setDescricao(currentMonumento.getNome(),currentMonumento.getDescricao());
             do {
                 try {
                     float percent = audio.getPercent();
@@ -269,19 +271,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
+        int cont = 0;
         for (Monumento m : monumentosObjectList) {
-            currentUrl = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-            audio = new AudioController(this, this.currentUrl);
+            String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+            audio = new AudioController(this,url);
+            cont++;
         }
         baixadasAudioDescricoes=true;
-        String coordenadaText = String.valueOf(coordenada.getText());
-        coordenada.setText("Audiodescrições baixadas");
-        try {
-            Thread.sleep(tempo.segundo*2);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (cont!=0) {
+            String coordenadaText = String.valueOf(coordenada.getText());
+            coordenada.setText("Audiodescrições baixadas");
+            try {
+                Thread.sleep(tempo.segundo * 2);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            coordenada.setText(coordenadaText);
         }
-        coordenada.setText(coordenadaText);
     };
 
     private void setNullResult () {
@@ -342,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     private void calculaDistancia(int index,Monumento m, double lat2, double lng2) {
-        double earthRadius = 6371;//kilometers
+        double earthRadius = 6372.795477598;//kilometers
         double dLat = Math.toRadians(lat2 - m.getLatitude());
         double dLng = Math.toRadians(lng2 - m.getLongitude());
         double sindLat = Math.sin(dLat / 2);
@@ -366,22 +372,30 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (monumentosObjectList.size() != 1) {
                     menorDistancia = 1000000;
                     int index=0;
+                    int quantidadeVisitados = 0;
                     for (Monumento m : monumentosObjectList) {
-                        calculaDistancia(index,m, currentLat, currentLong);
+                        if (!visitado.get(m.getIdMonumento())) {
+                            calculaDistancia(index, m, currentLat, currentLong);
+                            quantidadeVisitados++;
+                        }
                         index++;
                     }
-                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int)(menorDistancia * 1000) + " metros");
-                    int distaciaMinimaInt;
-                    try {
-                        distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
-                    } catch (Exception ex ) {
-                        distaciaMinimaInt = 0;
-                    }
-                    if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento())) {
-                        visitado.put(monumentoMaisProximo.getIdMonumento(),true);
-                        monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
-                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
-                        setCurrentMonumento(monumentoMaisProximo);
+                    if (quantidadeVisitados != 0) {
+                        coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
+                        int distaciaMinimaInt;
+                        try {
+                            distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
+                        } catch (Exception ex ) {
+                            distaciaMinimaInt = 0;
+                        }
+                        if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento())) {
+                            visitado.put(monumentoMaisProximo.getIdMonumento(),true);
+                            monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
+                            reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
+                            setCurrentMonumento(monumentoMaisProximo);
+                        }
+                    } else {
+                        coordenada.setText("Todo monumentos foram visitado!");
                     }
                 } else {
                     coordenada.setText("Sem dados suficientes para cálculo");
