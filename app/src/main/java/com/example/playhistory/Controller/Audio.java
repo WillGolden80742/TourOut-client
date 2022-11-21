@@ -12,12 +12,13 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class Audio {
-    private static final HashMap<String, Boolean> downloading = new HashMap<>();
+    private static HashMap<String, Boolean> downloading = new HashMap<>();
     private static MediaPlayer mediaPlayer = new MediaPlayer();
     private final String padraoNomeArquivo = "audio_descricao_";
     private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
@@ -57,8 +58,7 @@ public class Audio {
 
     public boolean isDownloading() {
         for (Map.Entry<String, Boolean> pair : downloading.entrySet()) {
-            boolean response = Boolean.parseBoolean(pair.getKey());
-            if (response) {
+            if (pair.getValue()) {
                 return true;
             }
         }
