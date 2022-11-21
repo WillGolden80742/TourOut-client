@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     urlInput.setQuery("", false);
                     urlInput.clearFocus();
                     inserirMonumentos();
+                    setVisitados(false);
                 } else {
                     setCurrentMonumento(monumentosObjectList.get(itemPosition));
                     reproduzirAudioDescricao(String.valueOf(idDMonumento));
@@ -384,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             while (true) {
                 if (monumentosObjectList.size() != 1) {
                     menorDistancia = 1000000;
-                    int index=0;
+                    int index = 0;
                     int quantidadeVisitados = 0;
                     for (Monumento m : monumentosObjectList) {
                         if (!visitado.get(m.getIdMonumento())) {
@@ -398,12 +399,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         int distaciaMinimaInt;
                         try {
                             distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
-                        } catch (Exception ex ) {
+                        } catch (Exception ex) {
                             distaciaMinimaInt = 0;
                         }
-                        if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
-                            visitado.put(monumentoMaisProximo.getIdMonumento(),true);
-                            monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
+                        if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
+                            visitado.put(monumentoMaisProximo.getIdMonumento(), true);
+                            monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
                             reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                             setCurrentMonumento(monumentoMaisProximo);
                             setMessage(currentMonumento);
@@ -422,14 +423,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
     };
 
-    private final Runnable reiniciarVisitados = () -> {
+    private Runnable reiniciarVisitados = () -> {
         while (true) {
-            int i = 0;
-            for (Monumento m : monumentosObjectList) {
-                visitado.put(m.getIdMonumento(),false);
-                monumentosObjectList.set(i, m);
-                i++;
-            }
+            setVisitados(false);
             try {
                 new Thread().sleep(tempo.hora*2);
             } catch (InterruptedException e) {
@@ -437,6 +433,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
     };
+
+    private void setVisitados (boolean b) {
+        int i = 0;
+        for (Monumento m : monumentosObjectList) {
+            visitado.put(m.getIdMonumento(),b);
+            monumentosObjectList.set(i, m);
+            i++;
+        }
+    }
 
     static boolean initCalc = false;
     @Override
