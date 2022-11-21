@@ -348,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     public void inserirMonumentos(String[] monumentos) {
-        monumentosLista = findViewById(R.id.monumentosLista);
+        monumentosLista = (ListView) findViewById(R.id.monumentosLista);
         String[] dados = monumentos;
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dados);
         monumentosLista.setAdapter(adapter);
