@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     // SERVIDOR
     private static final String host = "https://desmatamenos.website/";
     private static SeekBar seekMusic;
-    private static Audio audio;
+    private static Audio audio = new Audio();
     private static Thread progress;
     private static boolean isPlaying = false;
     // LISTA DE MONUMENTOS
@@ -77,6 +77,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private double menorDistancia, currentLat, currentLong;
     private EditText distaciaMinima;
     private final Tempo tempo = new Tempo();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        init();
+    }
+
+    public void init() {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        inserirMonumentos();
+        new Thread(reiniciarVisitados).start();
+        getPermissions();
+        buttonAudio = findViewById(R.id.playAudio);
+        seekMusic = findViewById(R.id.seekAudio);
+        urlInput = findViewById(R.id.urlInput);
+        coordenada = findViewById(R.id.coordenada);
+        distaciaMinima = findViewById(R.id.metroNumber);
+        setListener();
+    }
+
     @SuppressLint("NewApi")
     private final Runnable updateProgress = () -> {
         do {
@@ -132,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     } catch (Exception ex) {
                         distaciaMinimaInt = 0;
                     }
-                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
+                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && !audio.isPlaying()) {
                         visitado.put(monumentoMaisProximo.getIdMonumento(), true);
                         monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
                         reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
@@ -187,26 +209,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        init();
-    }
-
-    public void init() {
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        inserirMonumentos();
-        new Thread(reiniciarVisitados).start();
-        getPermissions();
-        buttonAudio = findViewById(R.id.playAudio);
-        seekMusic = findViewById(R.id.seekAudio);
-        urlInput = findViewById(R.id.urlInput);
-        coordenada = findViewById(R.id.coordenada);
-        distaciaMinima = findViewById(R.id.metroNumber);
-        setListener();
-    }
 
     public void setListener() {
         buttonAudio.setOnClickListener(new View.OnClickListener() {
