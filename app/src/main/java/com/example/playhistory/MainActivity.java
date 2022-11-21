@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -269,23 +270,23 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Runnable baixarAudioDescricaoDeMonumentos = () ->  {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isNotDownloaded = (new Audio().isDownloaded());
-        if (mWifi.isConnected() && !isNotDownloaded) {
+        boolean isNotDownloaded = !(new Audio().isDownloaded());
+        if (mWifi.isConnected() && isNotDownloaded) {
+            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
+            baixando.start();
             for (Monumento m : monumentosObjectList) {
                 String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
                 audio = new Audio(this,url);
             }
-            audio = new Audio(this, R.raw.baixando_dados);
-            audio.play();
-            while (audio.isDownloading() || audio.isPlaying()) {
+            while (audio.isDownloading() || baixando.isPlaying()) {
                 try {
                     Thread.sleep(tempo.segundo / 4);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-            audio = new Audio(this, R.raw.dados_baixados);
-            audio.play();
+            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
+            baixado.start();
             audio.setDownloaded();
         }
     };
@@ -400,7 +401,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         } catch (Exception ex ) {
                             distaciaMinimaInt = 0;
                         }
-                        if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento())) {
+                        if (((int)(menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
                             visitado.put(monumentoMaisProximo.getIdMonumento(),true);
                             monumentosObjectList.set(monumentoMaisProximoIndex,monumentoMaisProximo);
                             reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
