@@ -32,10 +32,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.example.playhistory.Controller.Audio;
-import com.example.playhistory.Model.Cache;
-import com.example.playhistory.Model.ConnectionFactory;
 import com.example.playhistory.Controller.Monumento;
 import com.example.playhistory.Controller.Tempo;
+import com.example.playhistory.Model.Cache;
+import com.example.playhistory.Model.ConnectionFactory;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONException;
@@ -51,34 +51,141 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
+    static boolean initCalc = false;
     // SERVIDOR
-    private static String host = "https://desmatamenos.website/";
-    private Cache cache;
-
-    // PLAYER DE AUDIO
-    FloatingActionButton buttonAudio;
-    SearchView urlInput;
-    String currentUrl = "";
+    private static final String host = "https://desmatamenos.website/";
     private static SeekBar seekMusic;
     private static Audio audio;
     private static Thread progress;
     private static boolean isPlaying = false;
-
     // LISTA DE MONUMENTOS
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
-    private Map<Integer, Boolean> visitado = new HashMap<>();
-    private ListView monumentosLista;
-    private Monumento currentMonumento;
     // LOCALIZAÇÃO
     private static TextView coordenada;
+    // PLAYER DE AUDIO
+    FloatingActionButton buttonAudio;
+    SearchView urlInput;
+    String currentUrl = "";
+    private Cache cache;
+    private final Map<Integer, Boolean> visitado = new HashMap<>();
+    private ListView monumentosLista;
+    private Monumento currentMonumento;
     private LocationManager locationManager;
-
     // CALCULO DO MONUMENTO MAIS PROXIMO
     private Monumento monumentoMaisProximo;
     private int monumentoMaisProximoIndex = 0;
     private double menorDistancia, currentLat, currentLong;
     private EditText distaciaMinima;
-    private Tempo tempo = new Tempo();
+    private final Tempo tempo = new Tempo();
+    @SuppressLint("NewApi")
+    private final Runnable updateProgress = () -> {
+        do {
+            try {
+                float percent = audio.getPercent();
+                seekMusic.setProgress((int) percent, true);
+                Thread.sleep(tempo.segundo * 1);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        } while (audio.isPlaying());
+        if (audio.getPercent() >= 99) {
+            seekMusic.setProgress(0);
+        }
+        resetPlayer();
+    };
+    private final Runnable playAudio = () -> {
+        if (isPlaying) {
+            audio.pause();
+            isPlaying = false;
+        } else {
+            if (!currentUrl.equals("")) {
+                try {
+                    audio.play();
+                    progress = new Thread(updateProgress);
+                    progress.start();
+                    buttonAudio.setImageResource(android.R.drawable.ic_media_pause);
+                    isPlaying = true;
+                } catch (Exception ex) {
+                    urlInput.setQuery("Erro", false);
+                }
+            }
+        }
+    };
+    private final Runnable monumentoMenorDistancia = () -> {
+        while (true) {
+            if (monumentosObjectList.size() != 1) {
+                menorDistancia = 1000000;
+                int index = 0;
+                int quantidadeVisitados = 0;
+                for (Monumento m : monumentosObjectList) {
+                    if (!visitado.get(m.getIdMonumento())) {
+                        calculaDistancia(index, m, currentLat, currentLong);
+                        quantidadeVisitados++;
+                    }
+                    index++;
+                }
+                if (quantidadeVisitados != 0) {
+                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
+                    int distaciaMinimaInt;
+                    try {
+                        distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
+                    } catch (Exception ex) {
+                        distaciaMinimaInt = 0;
+                    }
+                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
+                        visitado.put(monumentoMaisProximo.getIdMonumento(), true);
+                        monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
+                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
+                        setCurrentMonumento(monumentoMaisProximo);
+                        setMessage(currentMonumento);
+                    }
+                } else {
+                    coordenada.setText("Todo monumentos foram visitado!");
+                }
+            } else {
+                coordenada.setText("Sem dados suficientes para cálculo");
+            }
+            try {
+                new Thread().sleep(tempo.segundo * 10);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        }
+    };
+    private String monumentos;
+    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isNotDownloaded = !(new Audio().isDownloaded());
+        if (mWifi.isConnected() && isNotDownloaded) {
+            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
+            baixando.start();
+            for (Monumento m : monumentosObjectList) {
+                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+                audio = new Audio(this, url);
+            }
+            while (audio.isDownloading() || baixando.isPlaying()) {
+                try {
+                    Thread.sleep(tempo.segundo / 4);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
+            baixado.start();
+            audio.setDownloaded();
+        }
+    };
+    private final Runnable reiniciarVisitados = () -> {
+        while (true) {
+            setVisitados(false);
+            try {
+                new Thread().sleep(tempo.hora * 2);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setContentView(R.layout.activity_main);
         init();
     }
-
 
     public void init() {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -152,73 +258,35 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         this.currentMonumento = currentMonumento;
     }
 
-    private void setMessage(Monumento m){
+    private void setMessage(Monumento m) {
         Intent intent = new Intent(this, Messages.class);
         startActivity(intent);
-        Messages.setDescricao(m.getNome(),m.getDescricao());
+        Messages.setDescricao(m.getNome(), m.getDescricao());
     }
 
-    public void reproduzirAudioDescricao (String idDocumento) {
+    public void reproduzirAudioDescricao(String idDocumento) {
         if (!idDocumento.equals("0")) {
             try {
                 audio.reset();
-            } catch (Exception ex ) {}
+            } catch (Exception ex) {
+            }
             resetPlayer();
-            currentUrl=host+"audioDescricao.php?idDocumento="+idDocumento;
-            audio = new Audio(this,this.currentUrl);
+            currentUrl = host + "audioDescricao.php?idDocumento=" + idDocumento;
+            audio = new Audio(this, this.currentUrl);
             new Thread(playAudio).start();
         } else {
             coordenada.setText("Nenhum arquivo de voz encontrado");
         }
     }
 
-    public void resetPlayer () {
+    public void resetPlayer() {
         isPlaying = false;
         buttonAudio.setImageResource(android.R.drawable.ic_media_play);
     }
 
-    @SuppressLint("NewApi")
-    private Runnable updateProgress = () -> {
-            do {
-                try {
-                    float percent = audio.getPercent();
-                    seekMusic.setProgress((int) percent,true);
-                    Thread.sleep(tempo.segundo*1);
-                } catch (InterruptedException e) {
-                    System.exit(0);
-                }
-            } while (audio.isPlaying());
-            if (audio.getPercent() >= 99) {
-                seekMusic.setProgress(0);
-            }
-            resetPlayer();
-    };
+    private String[] listaDeMonumentos(String query) {
 
-
-    private final Runnable playAudio = () -> {
-        if (isPlaying) {
-            audio.pause();
-            isPlaying = false;
-        } else {
-            if (!currentUrl.equals("")) {
-                try {
-                    audio.play();
-                    progress = new Thread(updateProgress);
-                    progress.start();
-                    buttonAudio.setImageResource(android.R.drawable.ic_media_pause);
-                    isPlaying = true;
-                } catch (Exception ex) {
-                    urlInput.setQuery("Erro",false);
-                }
-            }
-        }
-    };
-
-
-    private String monumentos;
-    private String[] listaDeMonumentos (String query) {
-
-        String url = host+"monumentos.php?nome="+query;
+        String url = host + "monumentos.php?nome=" + query;
         String fileName = "listaDeMonumentos.json";
         ConnectionFactory connection = new ConnectionFactory(url);
 
@@ -228,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (cache.getCache(fileName) == "NOT_FOUND") {
                 cache.setCache(fileName);
             }
-            jsonArr = connection.jsonSearchByCache(fileName,"Monumentos");
+            jsonArr = connection.jsonSearchByCache(fileName, "Monumentos");
         } else {
             jsonArr = connection.jsonSearch("Monumentos");
         }
@@ -239,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 AtomicInteger cont = new AtomicInteger();
                 jsonArr.keys().forEachRemaining(k -> {
-                    monumentos+=k+",";
+                    monumentos += k + ",";
                     try {
                         Monumento m = new Monumento();
                         m.setIdMonumento(jsonArr.getJSONObject(k).getInt("idMonumento"));
@@ -255,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 });
                 if (cont.get() == 0) {
                     setNullResult();
-                    monumentos="Nenhum Monumento encontrado";
+                    monumentos = "Nenhum Monumento encontrado";
                 }
             }
         } catch (NullPointerException ex) {
@@ -268,65 +336,40 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return monumentos.split(",");
     }
 
-    private Runnable baixarAudioDescricaoDeMonumentos = () ->  {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isNotDownloaded = !(new Audio().isDownloaded());
-        if (mWifi.isConnected() && isNotDownloaded) {
-            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
-            baixando.start();
-            for (Monumento m : monumentosObjectList) {
-                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-                audio = new Audio(this,url);
-            }
-            while (audio.isDownloading() || baixando.isPlaying()) {
-                try {
-                    Thread.sleep(tempo.segundo / 4);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
-            baixado.start();
-            audio.setDownloaded();
-        }
-    };
-
-    private void setNullResult () {
+    private void setNullResult() {
         Monumento m = new Monumento();
         m.setNome("");
         m.setIdMonumento(0);
         monumentosObjectList.add(m);
     }
 
-
-    public void inserirMonumentos () {
-        inserirMonumentos (listaDeMonumentos(""));
+    public void inserirMonumentos() {
+        inserirMonumentos(listaDeMonumentos(""));
     }
 
-    public void inserirMonumentos (String[] monumentos) {
+    public void inserirMonumentos(String[] monumentos) {
         monumentosLista = (ListView) findViewById(R.id.monumentosLista);
         String[] dados = monumentos;
-        ArrayAdapter<String>  adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dados);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, dados);
         monumentosLista.setAdapter(adapter);
     }
 
     @SuppressLint("NewApi")
-    public void getPermissions () {
+    public void getPermissions() {
         boolean noLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         boolean noStorage = !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (noLocation) {
-            audio = new Audio(this,R.raw.permissoes);
+            audio = new Audio(this, R.raw.permissoes);
             audio.play();
             ActivityResultLauncher<String[]> permissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
                         Boolean coarseLocationGranted = result.getOrDefault(
-                                Manifest.permission.ACCESS_COARSE_LOCATION,false);
+                                Manifest.permission.ACCESS_COARSE_LOCATION, false);
                         Boolean writeStorageGranted = result.getOrDefault(
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
                         Boolean readStorageGranted = result.getOrDefault(
-                                Manifest.permission.READ_EXTERNAL_STORAGE,false);
+                                Manifest.permission.READ_EXTERNAL_STORAGE, false);
                         Boolean location = fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted;
                         Boolean storage = writeStorageGranted != null && readStorageGranted;
                         if (location && storage) {
@@ -339,7 +382,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
             );
 
-            permissionRequest.launch(new String[] {
+            permissionRequest.launch(new String[]{
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -355,13 +398,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     @SuppressLint("MissingPermission")
-    public void setLocationManager () {
+    public void setLocationManager() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
 
-
-    private void calculaDistancia(int index,Monumento m, double lat2, double lng2) {
+    private void calculaDistancia(int index, Monumento m, double lat2, double lng2) {
         double earthRadius = 6372.795477598;//kilometers
         double dLat = Math.toRadians(lat2 - m.getLatitude());
         double dLng = Math.toRadians(lng2 - m.getLongitude());
@@ -380,70 +422,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-
-    private final Runnable monumentoMenorDistancia = () -> {
-            while (true) {
-                if (monumentosObjectList.size() != 1) {
-                    menorDistancia = 1000000;
-                    int index = 0;
-                    int quantidadeVisitados = 0;
-                    for (Monumento m : monumentosObjectList) {
-                        if (!visitado.get(m.getIdMonumento())) {
-                            calculaDistancia(index, m, currentLat, currentLong);
-                            quantidadeVisitados++;
-                        }
-                        index++;
-                    }
-                    if (quantidadeVisitados != 0) {
-                        coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
-                        int distaciaMinimaInt;
-                        try {
-                            distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
-                        } catch (Exception ex) {
-                            distaciaMinimaInt = 0;
-                        }
-                        if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && audio.isPlaying()) {
-                            visitado.put(monumentoMaisProximo.getIdMonumento(), true);
-                            monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
-                            reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
-                            setCurrentMonumento(monumentoMaisProximo);
-                            setMessage(currentMonumento);
-                        }
-                    } else {
-                        coordenada.setText("Todo monumentos foram visitado!");
-                    }
-                } else {
-                    coordenada.setText("Sem dados suficientes para cálculo");
-                }
-                try {
-                    new Thread().sleep(tempo.segundo*10);
-                } catch (InterruptedException e) {
-                    System.exit(0);
-                }
-            }
-    };
-
-    private Runnable reiniciarVisitados = () -> {
-        while (true) {
-            setVisitados(false);
-            try {
-                new Thread().sleep(tempo.hora*2);
-            } catch (InterruptedException e) {
-                System.exit(0);
-            }
-        }
-    };
-
-    private void setVisitados (boolean b) {
+    private void setVisitados(boolean b) {
         int i = 0;
         for (Monumento m : monumentosObjectList) {
-            visitado.put(m.getIdMonumento(),b);
+            visitado.put(m.getIdMonumento(), b);
             monumentosObjectList.set(i, m);
             i++;
         }
     }
 
-    static boolean initCalc = false;
     @Override
     public void onLocationChanged(@NonNull Location location) {
         currentLat = location.getLatitude();

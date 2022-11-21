@@ -1,4 +1,5 @@
 package com.example.playhistory.Controller;
+
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -11,66 +12,64 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.sql.DataSource;
 
 
 public class Audio {
     private static MediaPlayer mediaPlayer = new MediaPlayer();
-    private ConnectionFactory connection;
+    private static final HashMap<String, Boolean> downloading = new HashMap<>();
     private final String padraoNomeArquivo = "audio_descricao_";
-    private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Audio_Descricao/";
+    private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
+    private ConnectionFactory connection;
     private String fileName;
     private File file;
-    private String configFile = "config.ini";
-    private String configFilePath = localDeArmazenamento+configFile;
-    private static HashMap<String,Boolean> downloading = new HashMap<>();
+    private final String configFile = "config.ini";
+    private final String configFilePath = localDeArmazenamento + configFile;
+    private final Runnable downloadMidia = () -> {
+        writeToFile(fileName, connection.getContentBytes());
+    };
 
     public Audio(Context context, String url) {
         connection = new ConnectionFactory(url);
         String[] nome = url.split("=");
-        fileName = padraoNomeArquivo+nome[nome.length-1]+".mp3";
-        file = new File(localDeArmazenamento+fileName);
+        fileName = padraoNomeArquivo + nome[nome.length - 1] + ".mp3";
+        file = new File(localDeArmazenamento + fileName);
         if (!file.exists() || file.length() < 1024) {
             if (file.length() < 1024) {
                 file.delete();
             }
-            downloading.put(fileName,true);
-            this.mediaPlayer = MediaPlayer.create(context, Uri.parse(url));
+            downloading.put(fileName, true);
+            mediaPlayer = MediaPlayer.create(context, Uri.parse(url));
             new Thread(downloadMidia).start();
         } else {
-            downloading.put(fileName,false);
-            this.mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file));
+            downloading.put(fileName, false);
+            mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file));
         }
     }
 
     public Audio(Context context, int id) {
-        this.mediaPlayer = MediaPlayer.create(context,id);
+        mediaPlayer = MediaPlayer.create(context, id);
     }
 
     public Audio() {
     }
 
-    public boolean isDownloading () {
-        for (Map.Entry<String,Boolean> pair : downloading.entrySet()) {
+    public boolean isDownloading() {
+        for (Map.Entry<String, Boolean> pair : downloading.entrySet()) {
             boolean response = Boolean.parseBoolean(pair.getKey());
-            if(response) {
+            if (response) {
                 return true;
             }
         }
         return false;
     }
 
-    public void setDownloaded () {
-        writeToFile(configFile,"downloaded:true");
+    public void setDownloaded() {
+        writeToFile(configFile, "downloaded:true");
     }
 
-    public boolean isDownloaded () {
+    public boolean isDownloaded() {
         String line = "";
         boolean downloaded = false;
         File file = new File(configFilePath);
@@ -94,12 +93,7 @@ public class Audio {
         return downloaded;
     }
 
-
-    private Runnable downloadMidia = () -> {
-        writeToFile(fileName,connection.getContentBytes());
-    };
-
-    public void writeToFile(String fileName, String content){
+    public void writeToFile(String fileName, String content) {
         File path = new File(localDeArmazenamento);
         File newDir = new File(String.valueOf(path));
         try {
@@ -109,12 +103,12 @@ public class Audio {
             FileOutputStream writer = new FileOutputStream(new File(path, fileName));
             writer.write(content.getBytes());
             writer.close();
-            downloading.put(fileName,false);
+            downloading.put(fileName, false);
         } catch (IOException e) {
         }
     }
 
-    public void writeToFile(String fileName, byte[] content){
+    public void writeToFile(String fileName, byte[] content) {
         File path = new File(localDeArmazenamento);
         File newDir = new File(String.valueOf(path));
         try {
@@ -124,7 +118,7 @@ public class Audio {
             FileOutputStream writer = new FileOutputStream(new File(path, fileName));
             writer.write(content);
             writer.close();
-            downloading.put(fileName,false);
+            downloading.put(fileName, false);
         } catch (IOException e) {
         }
     }
@@ -140,15 +134,15 @@ public class Audio {
     }
 
 
-    public boolean isPlaying () {
-        return  mediaPlayer.isPlaying();
+    public boolean isPlaying() {
+        return mediaPlayer.isPlaying();
     }
 
-    public void stop () {
+    public void stop() {
         mediaPlayer.stop();
     }
 
-    public void reset () {
+    public void reset() {
         mediaPlayer.reset();
     }
 
@@ -160,7 +154,7 @@ public class Audio {
         return mediaPlayer.getCurrentPosition();
     }
 
-    public float getPercent () {
-        return ((float) getPosition()/getDuration())*100;
+    public float getPercent() {
+        return ((float) getPosition() / getDuration()) * 100;
     }
 }

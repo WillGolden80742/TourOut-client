@@ -17,12 +17,28 @@ import java.net.URL;
 import java.net.URLConnection;
 
 public class ConnectionFactory {
-    private String url;
+    private final String url;
 
     public ConnectionFactory(String url) {
         this.url = url;
     }
 
+    public static byte[] inputStreamToByte(InputStream is) {
+        try {
+            ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
+            int ch;
+            while ((ch = is.read()) != -1) {
+                bytestream.write(ch);
+            }
+            byte[] imgdata = bytestream.toByteArray();
+            bytestream.close();
+            return imgdata;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     public String getContent(String urlToRead) {
         StringBuilder result = new StringBuilder();
@@ -46,28 +62,11 @@ public class ConnectionFactory {
         return result.toString();
     }
 
-    public byte[] getContentBytes () {
-        return getContentBytes (this.url);
+    public byte[] getContentBytes() {
+        return getContentBytes(this.url);
     }
 
-    public static byte[] inputStreamToByte(InputStream is) {
-        try {
-            ByteArrayOutputStream bytestream = new ByteArrayOutputStream();
-            int ch;
-            while ((ch = is.read()) != -1) {
-                bytestream.write(ch);
-            }
-            byte imgdata[] = bytestream.toByteArray();
-            bytestream.close();
-            return imgdata;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    public byte[] getContentBytes (String urlToRead) {
+    public byte[] getContentBytes(String urlToRead) {
         URL contentUrl = null;//w w  w  .  jav  a  2s  .c om
         InputStream inStream = null;
         try {
@@ -87,25 +86,25 @@ public class ConnectionFactory {
         return data;
     }
 
-    public String getContent () {
-        return getContent (this.url);
+    public String getContent() {
+        return getContent(this.url);
     }
 
 
-    public JSONObject jsonSearch (String jsonQuery) {
+    public JSONObject jsonSearch(String jsonQuery) {
         String content = getContent();
-        return jsonSearch (content,jsonQuery);
+        return jsonSearch(content, jsonQuery);
     }
 
-    public JSONObject jsonSearch (String content, String jsonQuery) {
+    public JSONObject jsonSearch(String content, String jsonQuery) {
         String json = content;
         String[] query = jsonQuery.split(":");
         JSONObject jsonResult = null;
         try {
             jsonResult = new JSONObject(json);
-            int contQuery=0;
+            int contQuery = 0;
             try {
-                while (contQuery<query.length) {
+                while (contQuery < query.length) {
                     jsonResult = new JSONObject(jsonResult.toString()).getJSONObject(query[contQuery]);
                     contQuery++;
                 }
@@ -123,7 +122,7 @@ public class ConnectionFactory {
     }
 
 
-    public JSONObject jsonSearchByCache (String fileName,String jsonQuery)  {
+    public JSONObject jsonSearchByCache(String fileName, String jsonQuery) {
         File file = new File(new Cache().getCache(fileName));
         if (file.exists()) {
             return jsonSearchByCache(file, jsonQuery);
@@ -132,8 +131,8 @@ public class ConnectionFactory {
         }
     }
 
-    public JSONObject jsonSearchByCache (File file, String jsonQuery) {
-        StringBuilder text = new StringBuilder("");
+    public JSONObject jsonSearchByCache(File file, String jsonQuery) {
+        StringBuilder text = new StringBuilder();
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             String line = "";
@@ -141,12 +140,11 @@ public class ConnectionFactory {
                 text.append(line);
             }
             br.close();
-            return jsonSearch (String.valueOf(text),jsonQuery);
+            return jsonSearch(String.valueOf(text), jsonQuery);
         } catch (IOException e) {
-            return jsonSearch (jsonQuery);
+            return jsonSearch(jsonQuery);
         }
     }
-
 
 
 }

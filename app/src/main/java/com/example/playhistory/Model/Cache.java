@@ -1,7 +1,6 @@
 package com.example.playhistory.Model;
-import android.os.Environment;
 
-import com.example.playhistory.Model.ConnectionFactory;
+import android.os.Environment;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,67 +11,22 @@ import java.security.NoSuchAlgorithmException;
 
 public class Cache extends ConnectionFactory {
 
-    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Cache/";
+    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Cache/";
     private String fileName;
     private File file;
     private String url;
+    private final Runnable downloadMidia = () -> {
+        writeToFile(fileName, getContentBytes());
+    };
 
-    public Cache (String url) {
+    public Cache(String url) {
         super(url);
         this.url = url;
 
     }
 
-    public Cache () {
+    public Cache() {
         super(null);
-    }
-
-    public void fileHashed(String fileName) {
-        String[] fileArr = fileName.split("[.]");
-        int lasPosition = fileArr.length-1;
-        this.fileName = getHashMd5(fileName)+"."+fileArr[lasPosition];
-    }
-
-    public void setCache (String fileName) {
-        fileHashed(fileName);
-        this.file = new File(localDeArmazenamento+this.fileName);
-        if (!file.exists()) {
-            new Thread(downloadMidia).start();
-        }
-    }
-
-
-
-    public String getCache (String fileName) {
-        fileHashed(fileName);
-        this.file = new File(localDeArmazenamento+this.fileName);
-        if (file.exists() && file.length()>1024) {
-            return localDeArmazenamento+this.fileName;
-        } else {
-            if (file.length() < 1024) {
-                file.delete();
-            }
-            return "NOT_FOUND";
-        }
-    }
-
-
-    private Runnable downloadMidia = () -> {
-        writeToFile(fileName,getContentBytes());
-    };
-
-    public void writeToFile(String fileName, byte[] content){
-        File path = new File(localDeArmazenamento);
-        File newDir = new File(String.valueOf(path));
-        try {
-            if (!newDir.exists()) {
-                newDir.mkdirs();
-            }
-            FileOutputStream writer = new FileOutputStream(new File(path, fileName));
-            writer.write(content);
-            writer.close();
-        } catch (IOException | NullPointerException e) {
-        }
     }
 
     public static String getHashMd5(String value) {
@@ -84,6 +38,47 @@ public class Cache extends ConnectionFactory {
         }
         BigInteger hash = new BigInteger(1, md.digest(value.getBytes()));
         return hash.toString(16);
+    }
+
+    public void fileHashed(String fileName) {
+        String[] fileArr = fileName.split("[.]");
+        int lasPosition = fileArr.length - 1;
+        this.fileName = getHashMd5(fileName) + "." + fileArr[lasPosition];
+    }
+
+    public void setCache(String fileName) {
+        fileHashed(fileName);
+        this.file = new File(localDeArmazenamento + this.fileName);
+        if (!file.exists()) {
+            new Thread(downloadMidia).start();
+        }
+    }
+
+    public String getCache(String fileName) {
+        fileHashed(fileName);
+        this.file = new File(localDeArmazenamento + this.fileName);
+        if (file.exists() && file.length() > 1024) {
+            return localDeArmazenamento + this.fileName;
+        } else {
+            if (file.length() < 1024) {
+                file.delete();
+            }
+            return "NOT_FOUND";
+        }
+    }
+
+    public void writeToFile(String fileName, byte[] content) {
+        File path = new File(localDeArmazenamento);
+        File newDir = new File(String.valueOf(path));
+        try {
+            if (!newDir.exists()) {
+                newDir.mkdirs();
+            }
+            FileOutputStream writer = new FileOutputStream(new File(path, fileName));
+            writer.write(content);
+            writer.close();
+        } catch (IOException | NullPointerException e) {
+        }
     }
 
 }
