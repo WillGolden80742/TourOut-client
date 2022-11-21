@@ -8,96 +8,116 @@
     android:background="@drawable/background"
     tools:context=".MainActivity">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/playAudio"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:srcCompat="@android:drawable/ic_media_play"
-        tools:ignore="SpeakableTextPresentCheck"
-        style="@style/play" />
-
-    <SeekBar
-        android:id="@+id/seekAudio"
-        android:layout_width="300dp"
-        android:layout_height="25dp"
-        android:layout_marginStart="67dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="30dp"
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/playAudio" />
-
-    <ListView
-        android:id="@+id/monumentosLista"
-        android:layout_width="341dp"
-        android:layout_height="350dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="40dp"
-        app:layout_constraintBottom_toBottomOf="@+id/seekAudio"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/urlInput"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/coordenada"
-        android:layout_width="369dp"
-        android:layout_height="82dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        android:text="@string/coordenada"
-        android:textAlignment="center"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/monumentosLista"
-        app:layout_constraintVertical_bias="0.0" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <SearchView
-        android:id="@+id/urlInput"
-        android:layout_width="355dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="20dp"
-        android:queryHint="@string/pesquisa"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView4" />
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="410dp"
+                android:layout_height="36dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                app:srcCompat="@drawable/ic_nome_logo" />
+        </TableRow>
 
-    <EditText
-        android:id="@+id/metroNumber"
-        android:layout_width="113dp"
-        android:layout_height="49dp"
-        android:layout_marginTop="93dp"
-        android:layout_marginBottom="163dp"
-        android:ems="10"
-        android:inputType="number"
-        android:text="200"
-        app:layout_constraintBottom_toTopOf="@+id/seekAudio"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.926"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/coordenada"
-        app:layout_constraintVertical_bias="0.0" />
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/imageView4"
-        android:layout_width="400dp"
-        android:layout_height="36dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/urlInput"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/ic_nome_logo" />
+            <SearchView
+                android:id="@+id/urlInput"
+                android:layout_width="355dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="20dp"
+                android:queryHint="@string/pesquisa" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="450dp">
+
+            <ListView
+                android:id="@+id/monumentosLista"
+                android:layout_width="341dp"
+                android:layout_height="405dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="0dp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="431dp"
+            android:layout_height="82dp">
+
+            <TextView
+                android:id="@+id/coordenada"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:layout_marginStart="0dp"
+                android:layout_marginEnd="0dp"
+                android:paddingTop="10dp"
+                android:text="@string/coordenada"
+                android:textAlignment="center"
+                android:textSize="20sp" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="92dp">
+
+            <EditText
+                android:id="@+id/metroNumber"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="300dp"
+                android:layout_marginTop="0dp"
+                android:layout_marginEnd="30dp"
+                android:layout_marginBottom="0dp"
+                android:ems="0"
+                android:inputType="number"
+                android:text="200" />
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="110dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/playAudio"
+                    style="@style/play"
+                    android:layout_width="60dp"
+                    android:layout_height="55dp"
+                    app:srcCompat="@android:drawable/ic_media_play"
+                    tools:ignore="SpeakableTextPresentCheck" />
+
+                <SeekBar
+                    android:id="@+id/seekAudio"
+                    android:layout_width="match_parent"
+                    android:layout_height="57dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginBottom="0dp" />
+            </LinearLayout>
+
+        </TableRow>
+    </TableLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
