@@ -86,7 +86,6 @@ public class Audio {
                 br.close();
                 return downloaded;
             } catch (IOException e) {
-                System.exit(0);
                 return false;
             }
         } else {

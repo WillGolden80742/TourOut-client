@@ -71,7 +71,7 @@ public class Cache extends ConnectionFactory {
             FileOutputStream writer = new FileOutputStream(new File(path, fileName));
             writer.write(content);
             writer.close();
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
         }
     }
 
