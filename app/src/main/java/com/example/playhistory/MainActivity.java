@@ -51,9 +51,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    static boolean initCalc = false;
     // SERVIDOR
     private static final String host = "https://desmatamenos.website/";
+    static boolean initCalc = false;
     private static SeekBar seekMusic;
     private static Audio audio = new Audio();
     private static Thread progress;
@@ -62,43 +62,43 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
     // LOCALIZAÇÃO
     private static TextView coordenada;
+    private final Map<Integer, Boolean> visitado = new HashMap<>();
+    private final Tempo tempo = new Tempo();
+    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isNotDownloaded = !(new Audio().isDownloaded());
+        if (mWifi.isConnected() && isNotDownloaded) {
+            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
+            baixando.start();
+            for (Monumento m : monumentosObjectList) {
+                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+                audio = new Audio(this, url);
+            }
+            while (audio.isDownloading() || baixando.isPlaying()) {
+                try {
+                    Thread.sleep(tempo.segundo / 4);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
+            baixado.start();
+            audio.setDownloaded();
+        }
+    };
+    private final Runnable reiniciarVisitados = () -> {
+        while (true) {
+            setVisitados(false);
+            try {
+                new Thread().sleep(tempo.hora * 2);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        }
+    };
     // PLAYER DE AUDIO
     FloatingActionButton buttonAudio;
-    SearchView urlInput;
-    String currentUrl = "";
-    private Cache cache;
-    private final Map<Integer, Boolean> visitado = new HashMap<>();
-    private ListView monumentosLista;
-    private Monumento currentMonumento;
-    private LocationManager locationManager;
-    // CALCULO DO MONUMENTO MAIS PROXIMO
-    private Monumento monumentoMaisProximo;
-    private int monumentoMaisProximoIndex = 0;
-    private double menorDistancia, currentLat, currentLong;
-    private EditText distaciaMinima;
-    private final Tempo tempo = new Tempo();
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        init();
-    }
-
-    public void init() {
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        inserirMonumentos();
-        new Thread(reiniciarVisitados).start();
-        getPermissions();
-        buttonAudio = findViewById(R.id.playAudio);
-        seekMusic = findViewById(R.id.seekAudio);
-        urlInput = findViewById(R.id.urlInput);
-        coordenada = findViewById(R.id.coordenada);
-        distaciaMinima = findViewById(R.id.metroNumber);
-        setListener();
-    }
-
     @SuppressLint("NewApi")
     private final Runnable updateProgress = () -> {
         do {
@@ -115,6 +115,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         resetPlayer();
     };
+    SearchView urlInput;
+    String currentUrl = "";
     private final Runnable playAudio = () -> {
         if (isPlaying) {
             audio.pause();
@@ -133,6 +135,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
     };
+    private Cache cache;
+    private ListView monumentosLista;
+    private Monumento currentMonumento;
+    private LocationManager locationManager;
+    // CALCULO DO MONUMENTO MAIS PROXIMO
+    private Monumento monumentoMaisProximo;
+    private int monumentoMaisProximoIndex = 0;
+    private double menorDistancia, currentLat, currentLong;
+    private EditText distaciaMinima;
     private final Runnable monumentoMenorDistancia = () -> {
         while (true) {
             if (monumentosObjectList.size() != 1) {
@@ -175,40 +186,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     };
     private String monumentos;
-    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isNotDownloaded = !(new Audio().isDownloaded());
-        if (mWifi.isConnected() && isNotDownloaded) {
-            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
-            baixando.start();
-            for (Monumento m : monumentosObjectList) {
-                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-                audio = new Audio(this, url);
-            }
-            while (audio.isDownloading() || baixando.isPlaying()) {
-                try {
-                    Thread.sleep(tempo.segundo / 4);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
-            baixado.start();
-            audio.setDownloaded();
-        }
-    };
-    private final Runnable reiniciarVisitados = () -> {
-        while (true) {
-            setVisitados(false);
-            try {
-                new Thread().sleep(tempo.hora * 2);
-            } catch (InterruptedException e) {
-                System.exit(0);
-            }
-        }
-    };
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        init();
+    }
+
+    public void init() {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        inserirMonumentos();
+        new Thread(reiniciarVisitados).start();
+        getPermissions();
+        buttonAudio = findViewById(R.id.playAudio);
+        seekMusic = findViewById(R.id.seekAudio);
+        urlInput = findViewById(R.id.urlInput);
+        coordenada = findViewById(R.id.coordenada);
+        distaciaMinima = findViewById(R.id.metroNumber);
+        setListener();
+    }
 
     public void setListener() {
         buttonAudio.setOnClickListener(new View.OnClickListener() {

@@ -13,11 +13,11 @@ public class Cache extends ConnectionFactory {
 
     public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Cache/";
     private String fileName;
-    private File file;
-    private String url;
     private final Runnable downloadMidia = () -> {
         writeToFile(fileName, getContentBytes());
     };
+    private File file;
+    private String url;
 
     public Cache(String url) {
         super(url);

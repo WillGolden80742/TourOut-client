@@ -17,18 +17,18 @@ import java.util.Map;
 
 
 public class Audio {
-    private static MediaPlayer mediaPlayer = new MediaPlayer();
     private static final HashMap<String, Boolean> downloading = new HashMap<>();
+    private static MediaPlayer mediaPlayer = new MediaPlayer();
     private final String padraoNomeArquivo = "audio_descricao_";
     private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
-    private ConnectionFactory connection;
-    private String fileName;
-    private File file;
     private final String configFile = "config.ini";
     private final String configFilePath = localDeArmazenamento + configFile;
+    private ConnectionFactory connection;
+    private String fileName;
     private final Runnable downloadMidia = () -> {
         writeToFile(fileName, connection.getContentBytes());
     };
+    private File file;
 
     public Audio(Context context, String url) {
         connection = new ConnectionFactory(url);
