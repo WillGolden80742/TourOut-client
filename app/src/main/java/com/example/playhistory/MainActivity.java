@@ -8,6 +8,8 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -28,11 +30,11 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.example.playhistory.controller.Audio;
+import com.example.playhistory.Controller.Audio;
 import com.example.playhistory.Model.Cache;
 import com.example.playhistory.Model.ConnectionFactory;
-import com.example.playhistory.controller.Monumento;
-import com.example.playhistory.controller.Tempo;
+import com.example.playhistory.Controller.Monumento;
+import com.example.playhistory.Controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.json.JSONException;
@@ -60,11 +62,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static Audio audio;
     private static Thread progress;
     private static boolean isPlaying = false;
-    private boolean baixadasAudioDescricoes = false;
 
     // LISTA DE MONUMENTOS
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
-    private Map<Integer, Boolean> visitado = new HashMap<Integer, Boolean>();
+    private Map<Integer, Boolean> visitado = new HashMap<>();
     private ListView monumentosLista;
     private Monumento currentMonumento;
     // LOCALIZAÇÃO
@@ -253,10 +254,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (cont.get() == 0) {
                     setNullResult();
                     monumentos="Nenhum Monumento encontrado";
-                } else {
-                    if (!baixadasAudioDescricoes) {
-                        new Thread(baixarAudioDescricaoDeMonumentos).start();
-                    }
                 }
             }
         } catch (NullPointerException ex) {
@@ -269,23 +266,27 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         return monumentos.split(",");
     }
 
-    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
-        int cont = 0;
-        for (Monumento m : monumentosObjectList) {
-            String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-            audio = new Audio(this,url);
-            cont++;
-        }
-        baixadasAudioDescricoes=true;
-        if (cont!=0) {
-            String coordenadaText = String.valueOf(coordenada.getText());
-            coordenada.setText("Audiodescrições baixadas");
-            try {
-                Thread.sleep(tempo.segundo * 2);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+    private Runnable baixarAudioDescricaoDeMonumentos = () ->  {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isNotDownloaded = (new Audio().isDownloaded());
+        if (mWifi.isConnected() && !isNotDownloaded) {
+            for (Monumento m : monumentosObjectList) {
+                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+                audio = new Audio(this,url);
             }
-            coordenada.setText(coordenadaText);
+            audio = new Audio(this, R.raw.baixando_dados);
+            audio.play();
+            while (audio.isDownloading() || audio.isPlaying()) {
+                try {
+                    Thread.sleep(tempo.segundo / 4);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            audio = new Audio(this, R.raw.dados_baixados);
+            audio.play();
+            audio.setDownloaded();
         }
     };
 
@@ -310,32 +311,44 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @SuppressLint("NewApi")
     public void getPermissions () {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)) {
-            String url=host+"permissoes.php?nome=permissoes";
-            audio = new Audio(this,url);
+        boolean noLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
+        boolean noStorage = !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
+        if (noLocation) {
+            audio = new Audio(this,R.raw.permissoes);
             audio.play();
-            ActivityResultLauncher<String[]> locationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+            ActivityResultLauncher<String[]> permissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
                         Boolean coarseLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_COARSE_LOCATION,false);
-                        if (fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted) {
+                        Boolean writeStorageGranted = result.getOrDefault(
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
+                        Boolean readStorageGranted = result.getOrDefault(
+                                Manifest.permission.READ_EXTERNAL_STORAGE,false);
+                        Boolean location = fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted;
+                        Boolean storage = writeStorageGranted != null && readStorageGranted;
+                        if (location && storage) {
                             setLocationManager();
-                        } else {
+                            audio.stop();
+                            new Thread(baixarAudioDescricaoDeMonumentos).start();
+                        } else if (location) {
                             coordenada.setText("Autorize a Geocalização");
                         }
                     }
             );
 
-            locationPermissionRequest.launch(new String[] {
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            permissionRequest.launch(new String[] {
                     Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
             });
 
         } else {
             setLocationManager();
+        }
+        if (!noStorage) {
+            new Thread(baixarAudioDescricaoDeMonumentos).start();
         }
     }
 

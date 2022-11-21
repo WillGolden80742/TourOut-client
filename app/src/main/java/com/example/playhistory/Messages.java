@@ -6,8 +6,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
-import com.example.playhistory.controller.Audio;
-import com.example.playhistory.controller.Tempo;
+import com.example.playhistory.Controller.Audio;
+import com.example.playhistory.Controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.Locale;

@@ -126,17 +126,13 @@ public class ConnectionFactory {
     public JSONObject jsonSearchByCache (String fileName,String jsonQuery)  {
         File file = new File(new Cache().getCache(fileName));
         if (file.exists()) {
-            try {
-                return jsonSearchByCache(file, this.url, jsonQuery);
-            } catch (JSONException e) {
-                return jsonSearch(jsonQuery);
-            }
+            return jsonSearchByCache(file, jsonQuery);
         } else {
             return jsonSearch(jsonQuery);
         }
     }
 
-    public JSONObject jsonSearchByCache (File file,String urlToRead, String jsonQuery) throws JSONException {
+    public JSONObject jsonSearchByCache (File file, String jsonQuery) {
         StringBuilder text = new StringBuilder("");
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));

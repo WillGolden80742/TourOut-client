@@ -14,7 +14,7 @@ public class Cache extends ConnectionFactory {
 
     public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/TourOut/Cache/";
     private String fileName;
-    private File path;
+    private File file;
     private String url;
 
     public Cache (String url) {
@@ -35,8 +35,8 @@ public class Cache extends ConnectionFactory {
 
     public void setCache (String fileName) {
         fileHashed(fileName);
-        this.path = new File(localDeArmazenamento+this.fileName);
-        if (!path.exists()) {
+        this.file = new File(localDeArmazenamento+this.fileName);
+        if (!file.exists()) {
             new Thread(downloadMidia).start();
         }
     }
@@ -45,10 +45,13 @@ public class Cache extends ConnectionFactory {
 
     public String getCache (String fileName) {
         fileHashed(fileName);
-        this.path = new File(localDeArmazenamento+this.fileName);
-        if (path.exists()) {
+        this.file = new File(localDeArmazenamento+this.fileName);
+        if (file.exists() && file.length()>1024) {
             return localDeArmazenamento+this.fileName;
         } else {
+            if (file.length() < 1024) {
+                file.delete();
+            }
             return "NOT_FOUND";
         }
     }
