@@ -58,146 +58,53 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiresApi(api = Build.VERSION_CODES.N)
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
-    // SERVIDOR
+    //SERVIDOR
     private static final String host = "https://desmatamenos.website/";
-    static boolean initCalc = false;
-    private static SeekBar seekMusic;
-    private static SeekBar seekdistancia;
+
+    //TEMPO
+    private final Tempo tempo = new Tempo();
+
+    //AUDIO START
     private static Audio audio = new Audio();
     private static Thread progress;
     private static boolean isPlaying = false;
-    // LISTA DE MONUMENTOS
-    private static List<Monumento> monumentosObjectList = new ArrayList<>();
-    // LOCALIZAÇÃO
-    private static TextView coordenada;
-    private final Map<Integer, Boolean> visitado = new HashMap<>();
-    private final Tempo tempo = new Tempo();
-    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        boolean isNotDownloaded = !(new Audio().isDownloaded());
-        if (mWifi.isConnected() && isNotDownloaded) {
-            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
-            baixando.start();
-            for (Monumento m : monumentosObjectList) {
-                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
-                audio = new Audio(this, url);
-            }
-            while (audio.isDownloading() || baixando.isPlaying()) {
-                try {
-                    Thread.sleep(tempo.segundo / 4);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
-            baixado.start();
-            audio.setDownloaded();
-        }
-    };
-    private final Runnable reiniciarVisitados = () -> {
-        while (true) {
-            setVisitados(false);
-            try {
-                new Thread().sleep(tempo.hora * 2);
-            } catch (InterruptedException e) {
-                System.exit(0);
-            }
-        }
-    };
-    // PLAYER DE AUDIO
-    FloatingActionButton buttonAudio;
-    @SuppressLint("NewApi")
-    private final Runnable updateProgress = () -> {
-        do {
-            try {
-                float percent = audio.getPercent();
-                seekMusic.setProgress((int) percent, true);
-                Thread.sleep(tempo.segundo * 1);
-            } catch (InterruptedException e) {
-                System.exit(0);
-            }
-        } while (audio.isPlaying());
-        if (audio.getPercent() >= 99) {
-            seekMusic.setProgress(0);
-        }
-        resetPlayer();
-    };
+    private String currentUrl = "";
+    //AUDIO END
 
-    SearchView urlInput;
-    String currentUrl = "";
-    private final Runnable playAudio = () -> {
-        if (isPlaying) {
-            audio.pause();
-            isPlaying = false;
-        } else {
-            if (!currentUrl.equals("")) {
-                try {
-                    audio.play();
-                    progress = new Thread(updateProgress);
-                    progress.start();
-                    buttonAudio.setImageResource(android.R.drawable.ic_media_pause);
-                    isPlaying = true;
-                } catch (Exception ex) {
-                    urlInput.setQuery("Erro", false);
-                }
-            }
-        }
-    };
+    //MONUMENTOS START
+    private String monumentos;
+    private static List<Monumento> monumentosObjectList = new ArrayList<>();
+    private static Monumento currentMonumento;
+    //MONUMENTOS END
+
+    //CACHE
     private Cache cache;
-    private ListView monumentosLista;
-    private Monumento currentMonumento;
-    private LocationManager locationManager;
-    // CALCULO DO MONUMENTO MAIS PROXIMO
+
+    //CALCULO PROXIMIDADE START
     private Monumento monumentoMaisProximo;
     private int monumentoMaisProximoIndex = 0;
     private double menorDistancia, currentLat, currentLong;
+    private static boolean initCalc = false;
+    private final Map<Integer, Boolean> visitado = new HashMap<>();
+    private LocationManager locationManager;
+    //CALCULO PROXIMIDADE END
+
+    //INTERFACE START
+    //  PESQUISA
+    private SearchView urlInput;
+    //  PLAYER DE AUDIO
+    private FloatingActionButton buttonAudio;
+    //  MESSAGEM COORDENADA
+    private static TextView coordenada;
+    //  DISTANCIA MINIMA
     private EditText distaciaMinima;
-    private final Runnable monumentoMenorDistancia = () -> {
-        while (true) {
-            if (monumentosObjectList.size() != 1) {
-                menorDistancia = 1000000;
-                int index = 0;
-                int quantidadeVisitados = 0;
-                for (Monumento m : monumentosObjectList) {
-                    if (m.getIdMonumento()!=0) {
-                        if (!visitado.get(m.getIdMonumento())) {
-                            calculaDistancia(index, m, currentLat, currentLong);
-                            quantidadeVisitados++;
-                        }
-                    }
-                    index++;
-                }
-                if (quantidadeVisitados != 0) {
-                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
-                    int distaciaMinimaInt;
-                    try {
-                        distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
-                    } catch (Exception ex) {
-                        distaciaMinimaInt = 0;
-                    }
-                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && !audio.isPlaying()) {
-                        visitado.put(monumentoMaisProximo.getIdMonumento(), true);
-                        monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
-                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
-                        setCurrentMonumento(monumentoMaisProximo);
-                        setMessage(currentMonumento);
-                        coordenada.setText("Localizando...");
-                    }
-                } else {
-                    coordenada.setText("Todo monumentos foram visitado!");
-                }
-            } else {
-                coordenada.setText("Sem dados suficientes para cálculo");
-            }
-            try {
-                new Thread().sleep(tempo.segundo * 10);
-            } catch (InterruptedException e) {
-                System.exit(0);
-            }
-        }
-    };
-    private String monumentos;
+    //  SEEK AUDIO
+    private static SeekBar seekMusic;
+    //  SEEK DISTANCIA
+    private static SeekBar seekdistancia;
+    //  LISTA
+    private ListView monumentosLista;
+    //INTERFACE END
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -332,7 +239,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                audio.setPercent(progress);
+                if(!currentUrl.equals("")) {
+                    audio.setPercent(progress);
+                } else {
+                    seekMusic.setProgress(0);
+                }
             }
         });
 
@@ -432,18 +343,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private String[] listaDeMonumentos(String query) {
 
         String url = host + "monumentos.php?nome=" + query;
-        String fileName = "listaDeMonumentos.json";
+        String fileName = url+".json";
         ConnectionFactory connection = new ConnectionFactory(url);
 
         JSONObject jsonArr;
-        if (query.equals("")) {
-            cache = new Cache(url);
-            if (cache.getCache(fileName) == "NOT_FOUND") {
-                cache.setCache(fileName);
-            }
-            jsonArr = connection.jsonSearchByCache(fileName, "Monumentos");
-        } else {
+        cache = new Cache(url);
+        if (cache.getCache(fileName) == "NOT_FOUND") {
+            cache.setCache(fileName);
             jsonArr = connection.jsonSearch("Monumentos");
+        } else {
+            jsonArr = connection.jsonSearchByCache(fileName, "Monumentos");
         }
 
         monumentosObjectList = new ArrayList<>();
@@ -451,14 +360,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 AtomicInteger cont = new AtomicInteger();
-                if (!query.equals("")) {
-                    Monumento m = new Monumento();
-                    m.setIdMonumento(0);
-                    String msg = "                       Limpar pesquisa";
-                    m.setNome(msg);
-                    monumentos+=msg+",";
-                    monumentosObjectList.add(m);
-                }
                 jsonArr.keys().forEachRemaining(k -> {
                     monumentos += k + ",";
                     try {
@@ -477,6 +378,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (cont.get() == 0) {
                     setNullResult();
                     monumentos = "Nenhum Monumento encontrado";
+                } else if (!query.equals("")) {
+                    Monumento m = new Monumento();
+                    m.setIdMonumento(0);
+                    String msg = "                       Limpar pesquisa";
+                    m.setNome(msg);
+                    monumentos+=msg+",";
+                    monumentosObjectList.add(m);
                 }
             }
         } catch (NullPointerException ex) {
@@ -593,4 +501,118 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             initCalc = true;
         }
     }
+
+    //RUNNABLE START
+    private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
+        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        boolean isNotDownloaded = !(new Audio().isDownloaded());
+        if (mWifi.isConnected() && isNotDownloaded) {
+            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
+            baixando.start();
+            for (Monumento m : monumentosObjectList) {
+                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+                audio = new Audio(this, url);
+            }
+            while (audio.isDownloading() || baixando.isPlaying()) {
+                try {
+                    Thread.sleep(tempo.segundo / 4);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
+            baixado.start();
+            audio.setDownloaded();
+        }
+    };
+    private final Runnable reiniciarVisitados = () -> {
+        while (true) {
+            setVisitados(false);
+            try {
+                new Thread().sleep(tempo.hora * 2);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        }
+    };
+    @SuppressLint("NewApi")
+    private final Runnable updateProgress = () -> {
+        do {
+            try {
+                float percent = audio.getPercent();
+                seekMusic.setProgress((int) percent, true);
+                Thread.sleep(tempo.segundo * 1);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        } while (audio.isPlaying());
+        if (audio.getPercent() >= 99) {
+            seekMusic.setProgress(0);
+        }
+        resetPlayer();
+    };
+    private final Runnable playAudio = () -> {
+        if (isPlaying) {
+            audio.pause();
+            isPlaying = false;
+        } else {
+            if (!currentUrl.equals("")) {
+                try {
+                    audio.play();
+                    progress = new Thread(updateProgress);
+                    progress.start();
+                    buttonAudio.setImageResource(android.R.drawable.ic_media_pause);
+                    isPlaying = true;
+                } catch (Exception ex) {
+                    urlInput.setQuery("Erro", false);
+                }
+            }
+        }
+    };
+    private final Runnable monumentoMenorDistancia = () -> {
+        while (true) {
+            if (monumentosObjectList.size() != 1) {
+                menorDistancia = 1000000;
+                int index = 0;
+                int quantidadeVisitados = 0;
+                for (Monumento m : monumentosObjectList) {
+                    if (m.getIdMonumento()!=0) {
+                        if (!visitado.get(m.getIdMonumento())) {
+                            calculaDistancia(index, m, currentLat, currentLong);
+                            quantidadeVisitados++;
+                        }
+                    }
+                    index++;
+                }
+                if (quantidadeVisitados != 0) {
+                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
+                    int distaciaMinimaInt;
+                    try {
+                        distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
+                    } catch (Exception ex) {
+                        distaciaMinimaInt = 0;
+                    }
+                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && !visitado.get(monumentoMaisProximo.getIdMonumento()) && !audio.isPlaying()) {
+                        visitado.put(monumentoMaisProximo.getIdMonumento(), true);
+                        monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
+                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
+                        setCurrentMonumento(monumentoMaisProximo);
+                        setMessage(currentMonumento);
+                        coordenada.setText("Localizando...");
+                    }
+                } else {
+                    coordenada.setText("Todo monumentos foram visitado!");
+                }
+            } else {
+                coordenada.setText("Sem dados suficientes para cálculo");
+            }
+            try {
+                new Thread().sleep(tempo.segundo * 10);
+            } catch (InterruptedException e) {
+                System.exit(0);
+            }
+        }
+    };
+    //RUNNABLE END
 }
