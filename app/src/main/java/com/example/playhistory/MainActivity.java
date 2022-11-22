@@ -2,6 +2,7 @@ package com.example.playhistory;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,8 +15,10 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.speech.RecognizerIntent;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -23,7 +26,10 @@ import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -44,6 +50,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -153,9 +160,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 int index = 0;
                 int quantidadeVisitados = 0;
                 for (Monumento m : monumentosObjectList) {
-                    if (!visitado.get(m.getIdMonumento())) {
-                        calculaDistancia(index, m, currentLat, currentLong);
-                        quantidadeVisitados++;
+                    if (m.getIdMonumento()!=0) {
+                        if (!visitado.get(m.getIdMonumento())) {
+                            calculaDistancia(index, m, currentLat, currentLong);
+                            quantidadeVisitados++;
+                        }
                     }
                     index++;
                 }
@@ -212,6 +221,46 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setListener();
     }
 
+    private void speech () {
+
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            someActivityResultLauncher.launch(intent);
+        } else {
+            Toast.makeText(this, "Your Device Don't Support Speech Input", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void disableKeyboard () {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+    }
+
+    ActivityResultLauncher<Intent> someActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent data = result.getData();
+                        ArrayList<String> textos = data
+                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                        String textosConcatenados = "";
+                        for (String t:textos) {
+                            textosConcatenados+=t;
+                        }
+                        urlInput.setQuery(textosConcatenados.toString(),true);
+                    }
+                }
+            });
+
     public void setListener() {
         buttonAudio.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -236,16 +285,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
 
+        urlInput.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                disableKeyboard();
+                speech();
+            }
+        });
+
+
+
         urlInput.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                callSearch(query);
                 return true;
             }
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                if (TextUtils.isEmpty(newText)) {
+                disableKeyboard();
+                if (!TextUtils.isEmpty(newText)) {
                     callSearch(newText);
                 }
                 return true;
@@ -253,6 +312,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             public void callSearch(String query) {
                 inserirMonumentos(listaDeMonumentos(query));
+                urlInput.setQuery("", false);
+                urlInput.clearFocus();
+                urlInput.setIconified(true);
             }
 
         });
@@ -389,6 +451,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 AtomicInteger cont = new AtomicInteger();
+                if (!query.equals("")) {
+                    Monumento m = new Monumento();
+                    m.setIdMonumento(0);
+                    String msg = "                       Limpar pesquisa";
+                    m.setNome(msg);
+                    monumentos+=msg+",";
+                    monumentosObjectList.add(m);
+                }
                 jsonArr.keys().forEachRemaining(k -> {
                     monumentos += k + ",";
                     try {
