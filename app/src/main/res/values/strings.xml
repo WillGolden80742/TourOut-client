@@ -2,5 +2,5 @@
     <string name="app_name">TourOut</string>
     <string name="coordenada">Localizando ...</string>
     <string name="pesquisa"></string>
-    <string name="metro">200</string>
+    <string name="metros">15</string>
 </resources>

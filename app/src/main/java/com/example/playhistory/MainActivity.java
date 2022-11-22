@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static final String host = "https://desmatamenos.website/";
     static boolean initCalc = false;
     private static SeekBar seekMusic;
+    private static SeekBar seekdistancia;
     private static Audio audio = new Audio();
     private static Thread progress;
     private static boolean isPlaying = false;
@@ -172,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                         setCurrentMonumento(monumentoMaisProximo);
                         setMessage(currentMonumento);
+                        coordenada.setText("Localizando...");
                     }
                 } else {
                     coordenada.setText("Todo monumentos foram visitado!");
@@ -205,7 +207,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         seekMusic = findViewById(R.id.seekAudio);
         urlInput = findViewById(R.id.urlInput);
         coordenada = findViewById(R.id.coordenada);
-        distaciaMinima = findViewById(R.id.metroNumber);
+        distaciaMinima = findViewById(R.id.metros);
+        seekdistancia = findViewById(R.id.seekDistancia);
         setListener();
     }
 
@@ -268,6 +271,67 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 audio.setPercent(progress);
+            }
+        });
+
+        seekdistancia.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                this.progress = i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int metros = 0;
+                switch (progress) {
+                    case 0:
+                        metros=15;
+                        break;
+                    case 1:
+                        metros=25;
+                        break;
+                    case 2:
+                        metros=50;
+                        break;
+                    case 3:
+                        metros=100;
+                        break;
+                    case 4:
+                        metros=250;
+                        break;
+                    case 5:
+                        metros=500;
+                        break;
+                    case 6:
+                        metros=750;
+                        break;
+                    case 7:
+                        metros=1000;
+                        break;
+                    case 8:
+                        metros=2500;
+                        break;
+                    case 9:
+                        metros=5000;
+                        break;
+                    case 10:
+                        metros=7500;
+                        break;
+                    case 11:
+                        metros=10000;
+                        break;
+                    case 12:
+                        metros=25000;
+                        break;
+                }
+                distaciaMinima.setText(String.valueOf(metros));
             }
         });
 
