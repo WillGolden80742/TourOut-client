@@ -12,7 +12,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -156,5 +155,14 @@ public class Audio {
 
     public float getPercent() {
         return ((float) getPosition() / getDuration()) * 100;
+    }
+
+    public void setPercent(float percent) {
+        if (percent > 100) {
+            percent = percent%100;
+        } else if (percent < 0) {
+            percent = 0;
+        }
+        mediaPlayer.seekTo ((int)((getDuration()/100)*(percent)));
     }
 }

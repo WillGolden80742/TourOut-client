@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
         resetPlayer();
     };
+
     SearchView urlInput;
     String currentUrl = "";
     private final Runnable playAudio = () -> {
@@ -252,6 +253,24 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
 
         });
+
+        seekMusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            int progress = 0;
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+                this.progress=i;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                audio.setPercent(progress);
+            }
+        });
+
     }
 
     public void setCurrentMonumento(Monumento currentMonumento) {
