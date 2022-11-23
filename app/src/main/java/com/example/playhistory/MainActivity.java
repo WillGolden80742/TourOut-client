@@ -399,11 +399,25 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     //DEVICE START
+    private boolean isConnected (String op) {
+        op = op.toLowerCase(Locale.ROOT).replace("-","");
+        switch (op){
+            case "wifi":
+                ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                return connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnected();
+            default:
+                ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        }
+    }
+
     private boolean isConnected () {
         ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
+
     private void speech() {
         if (isConnected()) {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -417,6 +431,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
     }
+
     private ActivityResultLauncher<Intent> speechActivityResultLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             new ActivityResultCallback<ActivityResult>() {
@@ -436,6 +451,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     }
                 }
             });
+
     private void disableKeyboard() {
         if (isConnected()) {
             View view = this.getCurrentFocus();
@@ -498,10 +514,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     //RUNNABLE START
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         boolean isNotDownloaded = !(new Audio().isDownloaded());
-        if (mWifi.isConnected() && isNotDownloaded) {
+        if (isConnected("wi-fi") && isNotDownloaded) {
             MediaPlayer baixando = MediaPlayer.create(this, raw.baixando_dados);
             baixando.start();
             for (Monumento m : monumentosObjectList) {
