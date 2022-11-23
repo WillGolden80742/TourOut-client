@@ -280,21 +280,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         buttonAudio.setImageResource(android.R.drawable.ic_media_play);
     }
 
-    private String[] listaDeMonumentos(String query) {
-
-        String url = host + "monumentos.php?nome=" + query;
-        String fileName = url + ".json";
+    private JSONObject getCache (String url,String fileName) {
         ConnectionFactory connection = new ConnectionFactory(url);
-
-        JSONObject jsonArr;
-        //CACHE
         Cache cache = new Cache(url);
         if (cache.getCache(fileName).equals("NOT_FOUND")) {
             cache.setCache(fileName);
-            jsonArr = connection.jsonSearch("Monumentos");
+            return connection.jsonSearch("Monumentos");
         } else {
-            jsonArr = connection.jsonSearchByCache(fileName, "Monumentos");
+            return connection.jsonSearchByCache(fileName, "Monumentos");
         }
+    }
+
+    private String[] listaDeMonumentos(String query) {
+
+        String url = host + "monumentos.php?nome=" + query;
+        JSONObject jsonArr = getCache(url,url + ".json");
 
         monumentosObjectList = new ArrayList<>();
         monumentos = "";
