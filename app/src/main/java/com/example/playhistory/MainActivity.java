@@ -1,7 +1,10 @@
 package com.example.playhistory;
 
-import static com.example.playhistory.R.*;
-import static java.lang.Thread.*;
+import static com.example.playhistory.R.id;
+import static com.example.playhistory.R.layout;
+import static com.example.playhistory.R.raw;
+import static com.example.playhistory.R.string;
+import static java.lang.Thread.sleep;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -62,46 +65,60 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     //SERVIDOR
     private static final String host = "https://desmatamenos.website/";
-
-    //TEMPO
-    private final Tempo tempo = new Tempo();
-
     //AUDIO START
     private static Audio audio = new Audio();
     private static boolean isPlaying = false;
-    private String currentUrl = "";
-    //AUDIO END
-
-    //MONUMENTOS START
-    private String monumentos;
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
     private static Monumento currentMonumento;
+    //AUDIO END
+    private static boolean initCalc = false;
+    //TEMPO
+    private final Tempo tempo = new Tempo();
+    private final Map<Integer, Boolean> visitado = new HashMap<>();
     //MONUMENTOS END
-
+    private String currentUrl = "";
+    //MONUMENTOS START
+    private String monumentos;
     //CALCULO PROXIMIDADE START
     private Monumento monumentoMaisProximo;
+    //CALCULO PROXIMIDADE END
     private int monumentoMaisProximoIndex = 0;
     private double menorDistancia, currentLat, currentLong;
-    private static boolean initCalc = false;
-    private final Map<Integer, Boolean> visitado = new HashMap<>();
-    //CALCULO PROXIMIDADE END
-
     //INTERFACE START
     //  PESQUISA
     private SearchView urlInput;
+    private ActivityResultLauncher<Intent> speechActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent data = result.getData();
+                        ArrayList<String> textos = data != null ? data
+                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
+                        StringBuilder textosConcatenados = new StringBuilder();
+                        assert textos != null;
+                        for (String t : textos) {
+                            textosConcatenados.append(t);
+                        }
+                        urlInput.setQuery(textosConcatenados.toString(), true);
+                    }
+                }
+            });
     //  PLAYER DE AUDIO
     private FloatingActionButton buttonAudio;
     //  MESSAGEM COORDENADA
     private TextView coordenada;
     //  DISTANCIA MINIMA
     private EditText distaciaMinima;
+    //INTERFACE END
     //  SEEK AUDIO
     private SeekBar seekMusic;
     //  SEEK DISTANCIA
     private SeekBar seekdistancia;
     //  LISTA
     private ListView monumentosLista;
-    //INTERFACE END
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setListener();
     }
 
-    private void speech () {
+    private void speech() {
 
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -138,33 +155,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-    private void disableKeyboard () {
+    private void disableKeyboard() {
         View view = this.getCurrentFocus();
         if (view != null) {
-            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
-    ActivityResultLauncher<Intent> speechActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
-                        Intent data = result.getData();
-                        ArrayList<String> textos = data != null ? data
-                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
-                        StringBuilder textosConcatenados = new StringBuilder();
-                        assert textos != null;
-                        for (String t:textos) {
-                            textosConcatenados.append(t);
-                        }
-                        urlInput.setQuery(textosConcatenados.toString(),true);
-                    }
-                }
-            });
 
     public void setListener() {
         buttonAudio.setOnClickListener(view -> new Thread(playAudio).start());
@@ -215,9 +212,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
         seekMusic.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             int progress = 0;
+
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                this.progress=i;
+                this.progress = i;
             }
 
             @Override
@@ -226,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if(!currentUrl.equals("")) {
+                if (!currentUrl.equals("")) {
                     audio.setPercent(progress);
                 } else {
                     seekMusic.setProgress(0);
@@ -252,43 +250,43 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 int metros = 0;
                 switch (progress) {
                     case 0:
-                        metros=15;
+                        metros = 15;
                         break;
                     case 1:
-                        metros=25;
+                        metros = 25;
                         break;
                     case 2:
-                        metros=50;
+                        metros = 50;
                         break;
                     case 3:
-                        metros=100;
+                        metros = 100;
                         break;
                     case 4:
-                        metros=250;
+                        metros = 250;
                         break;
                     case 5:
-                        metros=500;
+                        metros = 500;
                         break;
                     case 6:
-                        metros=750;
+                        metros = 750;
                         break;
                     case 7:
-                        metros=1000;
+                        metros = 1000;
                         break;
                     case 8:
-                        metros=2500;
+                        metros = 2500;
                         break;
                     case 9:
-                        metros=5000;
+                        metros = 5000;
                         break;
                     case 10:
-                        metros=7500;
+                        metros = 7500;
                         break;
                     case 11:
-                        metros=10000;
+                        metros = 10000;
                         break;
                     case 12:
-                        metros=25000;
+                        metros = 25000;
                         break;
                 }
                 distaciaMinima.setText(String.valueOf(metros));
@@ -330,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private String[] listaDeMonumentos(String query) {
 
         String url = host + "monumentos.php?nome=" + query;
-        String fileName = url+".json";
+        String fileName = url + ".json";
         ConnectionFactory connection = new ConnectionFactory(url);
 
         JSONObject jsonArr;
@@ -369,9 +367,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 } else if (!query.equals("")) {
                     Monumento m = new Monumento();
                     m.setIdMonumento(0);
-                    String msg = getString(string.espaco)+getString(string.limpar_pesquisa);
+                    String msg = getString(string.espaco) + getString(string.limpar_pesquisa);
                     m.setNome(msg);
-                    monumentos+=msg+",";
+                    monumentos += msg + ",";
                     monumentosObjectList.add(m);
                 }
             }
@@ -487,7 +485,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             initCalc = true;
         }
     }
-
+    
     //RUNNABLE START
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -563,7 +561,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 int index = 0;
                 int quantidadeVisitados = 0;
                 for (Monumento m : monumentosObjectList) {
-                    if (m.getIdMonumento()!=0) {
+                    if (m.getIdMonumento() != 0) {
                         if (Boolean.FALSE.equals(visitado.get(m.getIdMonumento()))) {
                             calculaDistancia(index, m, currentLat, currentLong);
                             quantidadeVisitados++;

@@ -17,7 +17,7 @@ import java.util.Map;
 
 
 public class Audio {
-    private static HashMap<String, Boolean> downloading = new HashMap<>();
+    private static final HashMap<String, Boolean> downloading = new HashMap<>();
     private static MediaPlayer mediaPlayer = new MediaPlayer();
     private final String padraoNomeArquivo = "audio_descricao_";
     private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
@@ -159,10 +159,10 @@ public class Audio {
 
     public void setPercent(float percent) {
         if (percent > 100) {
-            percent = percent%100;
+            percent = percent % 100;
         } else if (percent < 0) {
             percent = 0;
         }
-        mediaPlayer.seekTo ((int)((getDuration()/100)*(percent)));
+        mediaPlayer.seekTo((int) ((getDuration() / 100) * (percent)));
     }
 }
