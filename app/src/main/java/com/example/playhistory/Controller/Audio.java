@@ -10,6 +10,7 @@ import com.example.playhistory.Model.ConnectionFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -86,7 +87,11 @@ public class Audio {
                 }
                 br.close();
                 return downloaded;
+            } catch (FileNotFoundException e) {
+                System.out.println("FileNotFoundException : "+e);
+                return false;
             } catch (IOException e) {
+                System.out.println("IOException ex : "+e);
                 return false;
             }
         } else {

@@ -611,7 +611,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     index++;
                 }
                 if (quantidadeVisitados != 0) {
-                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
+                    boolean isKm = (menorDistancia*1000)>1000;
+                    String medida = (isKm)?"quilometros":"metros";
+                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.2f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida);
                     float distaciaMinimaFloat;
                     try {
                         float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
