@@ -178,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 setVisitados(false);
             } else {
                 setCurrentMonumento(monumentosObjectList.get(itemPosition));
-                reproduzirAudioDescricao(getString(idMonumento));
+                reproduzirAudioDescricao(String.valueOf(idMonumento));
                 setMessage(currentMonumento);
             }
         });
@@ -187,7 +187,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             disableKeyboard();
             speech();
         });
-
 
 
         urlInput.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
