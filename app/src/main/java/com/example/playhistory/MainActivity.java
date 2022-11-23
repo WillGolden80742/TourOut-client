@@ -485,7 +485,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             initCalc = true;
         }
     }
-    
+
     //RUNNABLE START
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
         ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
