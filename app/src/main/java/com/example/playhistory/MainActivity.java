@@ -367,7 +367,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 } else if (!query.equals("")) {
                     Monumento m = new Monumento();
                     m.setIdMonumento(0);
-                    String msg = getString(string.espaco) + getString(string.limpar_pesquisa);
+                    String msg = "                       "+ getString(string.limpar_pesquisa);
                     m.setNome(msg);
                     monumentos += msg + ",";
                     monumentosObjectList.add(m);

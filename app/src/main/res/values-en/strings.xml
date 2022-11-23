@@ -2,8 +2,7 @@
      <string name="app_name">TourOut</string>
      <string name="localizando">Finding ...</string>
      <string name="todos_visitados">All monuments have been visited</string>
-     <string name="pesquisa"></string>
-     <string name="espaco"> </string>
+     <string name="pesquisa"></string>ng>
      <string name="verifique_sua_conexao">Check your internet connection</string>
      <string name="seu_dispositivo_nao_suporta_entrada_de_fala">Your device does not support speech input</string>
      <string name="limpar_pesquisa">clear search</string>
