@@ -4,7 +4,6 @@ import static com.example.playhistory.R.layout;
 import static com.example.playhistory.R.raw;
 import static com.example.playhistory.R.string;
 import static java.lang.Thread.sleep;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -31,7 +30,6 @@ import android.widget.SearchView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -40,17 +38,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
 import com.example.playhistory.Controller.Audio;
 import com.example.playhistory.Controller.Monumento;
 import com.example.playhistory.Controller.Tempo;
 import com.example.playhistory.Model.Cache;
 import com.example.playhistory.Model.ConnectionFactory;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
