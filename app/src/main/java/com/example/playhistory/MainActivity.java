@@ -86,25 +86,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     //INTERFACE START
     //  PESQUISA
     private SearchView urlInput;
-    private ActivityResultLauncher<Intent> speechActivityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        // There are no request codes
-                        Intent data = result.getData();
-                        ArrayList<String> textos = data != null ? data
-                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
-                        StringBuilder textosConcatenados = new StringBuilder();
-                        assert textos != null;
-                        for (String t : textos) {
-                            textosConcatenados.append(t);
-                        }
-                        urlInput.setQuery(textosConcatenados.toString(), true);
-                    }
-                }
-            });
     //  PLAYER DE AUDIO
     private FloatingActionButton buttonAudio;
     //  MESSAGEM COORDENADA
@@ -139,37 +120,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         distaciaMinima = findViewById(id.metros);
         seekdistancia = findViewById(id.seekDistancia);
         setListener();
-    }
-
-
-    private boolean isConnected () {
-        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
-    private void speech() {
-        if (isConnected()) {
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                speechActivityResultLauncher.launch(intent);
-            } else {
-                Toast.makeText(this, getString(string.seu_dispositivo_nao_suporta_entrada_de_fala), Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void disableKeyboard() {
-        if (isConnected()) {
-            View view = this.getCurrentFocus();
-            if (view != null) {
-                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-            }
-        }
     }
 
     public void setListener() {
@@ -410,6 +360,92 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         monumentosLista.setAdapter(adapter);
     }
 
+    private void calculaDistancia(int index, Monumento m, double lat2, double lng2) {
+        double earthRadius = 6372.795477598;//kilometers
+        double dLat = Math.toRadians(lat2 - m.getLatitude());
+        double dLng = Math.toRadians(lng2 - m.getLongitude());
+        double sindLat = Math.sin(dLat / 2);
+        double sindLng = Math.sin(dLng / 2);
+        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
+                * Math.cos(Math.toRadians(m.getLatitude()))
+                * Math.cos(Math.toRadians(lat2));
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        double distancia = earthRadius * c;
+        if (distancia < menorDistancia) {
+            menorDistancia = distancia;
+            monumentoMaisProximo = m;
+            monumentoMaisProximoIndex = index;
+        }
+    }
+
+    private void setVisitados(boolean b) {
+        int i = 0;
+        for (Monumento m : monumentosObjectList) {
+            visitado.put(m.getIdMonumento(), b);
+            monumentosObjectList.set(i, m);
+            i++;
+        }
+    }
+
+    @Override
+    public void onLocationChanged(@NonNull Location location) {
+        currentLat = location.getLatitude();
+        currentLong = location.getLongitude();
+        if (!initCalc) {
+            new Thread(monumentoMenorDistancia).start();
+            initCalc = true;
+        }
+    }
+
+
+    //DEVICE START
+    private boolean isConnected () {
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+    private void speech() {
+        if (isConnected()) {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
+
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                speechActivityResultLauncher.launch(intent);
+            } else {
+                Toast.makeText(this, getString(string.seu_dispositivo_nao_suporta_entrada_de_fala), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    private ActivityResultLauncher<Intent> speechActivityResultLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            new ActivityResultCallback<ActivityResult>() {
+                @Override
+                public void onActivityResult(ActivityResult result) {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        // There are no request codes
+                        Intent data = result.getData();
+                        ArrayList<String> textos = data != null ? data
+                                .getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
+                        StringBuilder textosConcatenados = new StringBuilder();
+                        assert textos != null;
+                        for (String t : textos) {
+                            textosConcatenados.append(t);
+                        }
+                        urlInput.setQuery(textosConcatenados.toString(), true);
+                    }
+                }
+            });
+    private void disableKeyboard() {
+        if (isConnected()) {
+            View view = this.getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
+        }
+    }
+
     @SuppressLint("NewApi")
     public void getPermissions() {
         boolean noLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
@@ -458,43 +494,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
-
-    private void calculaDistancia(int index, Monumento m, double lat2, double lng2) {
-        double earthRadius = 6372.795477598;//kilometers
-        double dLat = Math.toRadians(lat2 - m.getLatitude());
-        double dLng = Math.toRadians(lng2 - m.getLongitude());
-        double sindLat = Math.sin(dLat / 2);
-        double sindLng = Math.sin(dLng / 2);
-        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
-                * Math.cos(Math.toRadians(m.getLatitude()))
-                * Math.cos(Math.toRadians(lat2));
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distancia = earthRadius * c;
-        if (distancia < menorDistancia) {
-            menorDistancia = distancia;
-            monumentoMaisProximo = m;
-            monumentoMaisProximoIndex = index;
-        }
-    }
-
-    private void setVisitados(boolean b) {
-        int i = 0;
-        for (Monumento m : monumentosObjectList) {
-            visitado.put(m.getIdMonumento(), b);
-            monumentosObjectList.set(i, m);
-            i++;
-        }
-    }
-
-    @Override
-    public void onLocationChanged(@NonNull Location location) {
-        currentLat = location.getLatitude();
-        currentLong = location.getLongitude();
-        if (!initCalc) {
-            new Thread(monumentoMenorDistancia).start();
-            initCalc = true;
-        }
-    }
+    //DEVICE END
 
     //RUNNABLE START
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
