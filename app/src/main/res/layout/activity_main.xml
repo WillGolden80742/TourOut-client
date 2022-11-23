@@ -68,7 +68,7 @@
                 android:layout_marginStart="0dp"
                 android:layout_marginEnd="0dp"
                 android:paddingTop="10dp"
-                android:text="@string/coordenada"
+                android:text="@string/localizando"
                 android:textAlignment="center"
                 android:textSize="20sp" />
         </TableRow>
