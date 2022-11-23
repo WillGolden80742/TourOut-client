@@ -1,15 +1,12 @@
 package com.example.playhistory;
-
+import static com.example.playhistory.Model.ConnectionFactory.isConnected;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.playhistory.Controller.Audio;
 import com.example.playhistory.Controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import java.util.Locale;
 
 public class Messages extends AppCompatActivity {
@@ -27,7 +24,9 @@ public class Messages extends AppCompatActivity {
                 System.exit(0);
             }
         } while (new Audio().isPlaying());
-        finish();
+        if (isConnected(this)) {
+            finish();
+        }
     };
 
     public static void setDescricao(String nome, String descricao) {

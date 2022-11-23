@@ -1,5 +1,4 @@
 package com.example.playhistory;
-
 import static com.example.playhistory.R.id;
 import static com.example.playhistory.R.layout;
 import static com.example.playhistory.R.raw;
@@ -142,6 +141,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setListener();
     }
 
+
+    private boolean isConnected () {
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
     private void speech() {
         if (isConnected()) {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -166,15 +172,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-    private boolean isConnected () {
-        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-    }
-
     public void setListener() {
         buttonAudio.setOnClickListener(view -> new Thread(playAudio).start());
-
         monumentosLista.setOnItemClickListener((listView, itemView, itemPosition, itemId) -> {
             int idMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
             if (idMonumento == 0) {

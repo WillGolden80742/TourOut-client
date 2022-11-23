@@ -1,13 +1,12 @@
 package com.example.playhistory.Controller;
+import static com.example.playhistory.Model.ConnectionFactory.isConnected;
+
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
-import android.widget.Toast;
+
 import com.example.playhistory.Model.ConnectionFactory;
-import com.example.playhistory.R;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -49,18 +48,6 @@ public class Audio {
             downloading.put(fileName, false);
             mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file));
         }
-    }
-
-
-    private boolean isConnected (Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        try {
-            Toast.makeText(context.getApplicationContext(), R.string.verifique_sua_conexao, Toast.LENGTH_SHORT).show();
-        } catch (NullPointerException ex) {
-            ex.printStackTrace();
-        }
-        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
 
