@@ -143,24 +143,33 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void speech() {
+        if (isConnected()) {
+            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
 
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault());
-
-        if (intent.resolveActivity(getPackageManager()) != null) {
-            speechActivityResultLauncher.launch(intent);
-        } else {
-            Toast.makeText(this, getString(string.seu_dispositivo_nao_suporta_entrada_de_fala), Toast.LENGTH_SHORT).show();
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                speechActivityResultLauncher.launch(intent);
+            } else {
+                Toast.makeText(this, getString(string.seu_dispositivo_nao_suporta_entrada_de_fala), Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
     private void disableKeyboard() {
-        View view = this.getCurrentFocus();
-        if (view != null) {
-            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        if (isConnected()) {
+            View view = this.getCurrentFocus();
+            if (view != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            }
         }
+    }
+
+    private boolean isConnected () {
+        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
     public void setListener() {
@@ -203,9 +212,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             public void callSearch(String query) {
                 inserirMonumentos(listaDeMonumentos(query));
-                urlInput.setQuery("", false);
-                urlInput.clearFocus();
-                urlInput.setIconified(true);
+                if (isConnected()) {
+                    urlInput.setQuery("", false);
+                    urlInput.clearFocus();
+                    urlInput.setIconified(true);
+                }
             }
 
         });
