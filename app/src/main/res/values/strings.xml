@@ -1,8 +1,13 @@
 <resources>
     <string name="app_name">TourOut</string>
     <string name="localizando">Localizando ...</string>
-    <string name="todos_visitados">Todo monumentos foram visitado!</string>
+    <string name="todos_visitados">Todo monumentos foram visitado</string>
     <string name="pesquisa"></string>
+    <string name="espaco">                       </string>
+    <string name="verifique_sua_conexao">Verifique sua conexão com a internet</string>
+    <string name="seu_dispositivo_nao_suporta_entrada_de_fala">Seu dispositivo não suporta entrada de fala</string>
+    <string name="limpar_pesquisa">limpar pesquisa</string>
+    <string name="nenhum_monumento_encontrando">Nenhum monumento encontrado"</string>
     <string name="nenhum_arquivo_encontrando">Nenhum arquivo de voz encontrado</string>
     <string name="autorize_localizacao">Autorize a Geocalização</string>
     <string name="metros">15</string>

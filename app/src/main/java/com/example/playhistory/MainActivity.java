@@ -1,5 +1,6 @@
 package com.example.playhistory;
 
+import static com.example.playhistory.R.*;
 import static java.lang.Thread.*;
 
 import android.Manifest;
@@ -105,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(layout.activity_main);
         init();
     }
 
@@ -115,12 +116,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         inserirMonumentos();
         new Thread(reiniciarVisitados).start();
         getPermissions();
-        buttonAudio = findViewById(R.id.playAudio);
-        seekMusic = findViewById(R.id.seekAudio);
-        urlInput = findViewById(R.id.urlInput);
-        coordenada = findViewById(R.id.coordenada);
-        distaciaMinima = findViewById(R.id.metros);
-        seekdistancia = findViewById(R.id.seekDistancia);
+        buttonAudio = findViewById(id.playAudio);
+        seekMusic = findViewById(id.seekAudio);
+        urlInput = findViewById(id.urlInput);
+        coordenada = findViewById(id.coordenada);
+        distaciaMinima = findViewById(id.metros);
+        seekdistancia = findViewById(id.seekDistancia);
         setListener();
     }
 
@@ -133,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if (intent.resolveActivity(getPackageManager()) != null) {
             speechActivityResultLauncher.launch(intent);
         } else {
-            Toast.makeText(this, "Your Device Don't Support Speech Input", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(string.seu_dispositivo_nao_suporta_entrada_de_fala), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -169,15 +170,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         buttonAudio.setOnClickListener(view -> new Thread(playAudio).start());
 
         monumentosLista.setOnItemClickListener((listView, itemView, itemPosition, itemId) -> {
-            int idDMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
-            if (idDMonumento == 0) {
+            int idMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
+            if (idMonumento == 0) {
                 urlInput.setQuery("", false);
                 urlInput.clearFocus();
                 inserirMonumentos();
                 setVisitados(false);
             } else {
                 setCurrentMonumento(monumentosObjectList.get(itemPosition));
-                reproduzirAudioDescricao(String.valueOf(idDMonumento));
+                reproduzirAudioDescricao(getString(idMonumento));
                 setMessage(currentMonumento);
             }
         });
@@ -318,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             audio = new Audio(this, this.currentUrl);
             new Thread(playAudio).start();
         } else {
-            coordenada.setText(R.string.nenhum_arquivo_encontrando);
+            coordenada.setText(string.nenhum_arquivo_encontrando);
         }
     }
 
@@ -365,11 +366,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 });
                 if (cont.get() == 0) {
                     setNullResult();
-                    monumentos = "Nenhum Monumento encontrado";
+                    monumentos = getString(string.nenhum_monumento_encontrando);
                 } else if (!query.equals("")) {
                     Monumento m = new Monumento();
                     m.setIdMonumento(0);
-                    String msg = "                       Limpar pesquisa";
+                    String msg = getString(string.espaco)+getString(string.limpar_pesquisa);
                     m.setNome(msg);
                     monumentos+=msg+",";
                     monumentosObjectList.add(m);
@@ -377,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         } catch (NullPointerException ex) {
             setNullResult();
-            monumentos = "Verifique sua conexão com a internet";
+            monumentos = getString(string.verifique_sua_conexao);
         } catch (Exception ex) {
             setNullResult();
             monumentos = String.valueOf(ex);
@@ -397,7 +398,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     public void inserirMonumentos(String[] monumentos) {
-        monumentosLista = findViewById(R.id.monumentosLista);
+        monumentosLista = findViewById(id.monumentosLista);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, monumentos);
         monumentosLista.setAdapter(adapter);
     }
@@ -407,7 +408,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         boolean noLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         boolean noStorage = !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (noLocation) {
-            audio = new Audio(this, R.raw.permissoes);
+            audio = new Audio(this, raw.permissoes);
             audio.play();
             ActivityResultLauncher<String[]> permissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
@@ -425,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                             audio.stop();
                             new Thread(baixarAudioDescricaoDeMonumentos).start();
                         } else if (location) {
-                            coordenada.setText(R.string.autorize_localizacao);
+                            coordenada.setText(string.autorize_localizacao);
                         }
                     }
             );
@@ -494,7 +495,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         boolean isNotDownloaded = !(new Audio().isDownloaded());
         if (mWifi.isConnected() && isNotDownloaded) {
-            MediaPlayer baixando = MediaPlayer.create(this, R.raw.baixando_dados);
+            MediaPlayer baixando = MediaPlayer.create(this, raw.baixando_dados);
             baixando.start();
             for (Monumento m : monumentosObjectList) {
                 String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
@@ -507,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     e.printStackTrace();
                 }
             }
-            MediaPlayer baixado = MediaPlayer.create(this, R.raw.dados_baixados);
+            MediaPlayer baixado = MediaPlayer.create(this, raw.dados_baixados);
             baixado.start();
             audio.setDownloaded();
         }
@@ -585,13 +586,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                         reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                         setCurrentMonumento(monumentoMaisProximo);
                         setMessage(currentMonumento);
-                        coordenada.setText(R.string.localizando);
+                        coordenada.setText(string.localizando);
                     }
                 } else {
-                    coordenada.setText(R.string.todos_visitados);
+                    coordenada.setText(string.todos_visitados);
                 }
             } else {
-                coordenada.setText(R.string.sem_dados);
+                coordenada.setText(string.sem_dados);
             }
             try {
                 sleep(tempo.segundo * 10);
