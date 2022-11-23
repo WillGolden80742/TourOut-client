@@ -1,11 +1,13 @@
 package com.example.playhistory.Controller;
-
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
-
+import android.widget.Toast;
 import com.example.playhistory.Model.ConnectionFactory;
+import com.example.playhistory.R;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,18 +37,32 @@ public class Audio {
         String[] nome = url.split("=");
         fileName = padraoNomeArquivo + nome[nome.length - 1] + ".mp3";
         file = new File(localDeArmazenamento + fileName);
-        if (!file.exists() || file.length() < 1024) {
+        boolean hashNoFile = !file.exists() || file.length() < 1024;
+        if (hashNoFile && isConnected(context)) {
             if (file.length() < 1024) {
                 file.delete();
             }
             downloading.put(fileName, true);
             mediaPlayer = MediaPlayer.create(context, Uri.parse(url));
             new Thread(downloadMidia).start();
-        } else {
+        } else if (!hashNoFile) {
             downloading.put(fileName, false);
             mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file));
         }
     }
+
+
+    private boolean isConnected (Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        try {
+            Toast.makeText(context.getApplicationContext(), R.string.verifique_sua_conexao, Toast.LENGTH_SHORT).show();
+        } catch (NullPointerException ex) {
+            ex.printStackTrace();
+        }
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
 
     public Audio(Context context, int id) {
         mediaPlayer = MediaPlayer.create(context, id);
