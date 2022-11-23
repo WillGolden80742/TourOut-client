@@ -64,11 +64,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static boolean isPlaying = false;
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
     private static Monumento currentMonumento;
+    private static boolean midiaDownloaded = true;
     //AUDIO END
     private static boolean initCalc = false;
     //TEMPO
     private final Tempo tempo = new Tempo();
     private final Map<Integer, Boolean> visitado = new HashMap<>();
+    private final Map<Integer, Boolean> anunciado = new HashMap<>();
     //MONUMENTOS END
     private String currentUrl = "";
     //MONUMENTOS START
@@ -87,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private TextView coordenada;
     //  DISTANCIA MINIMA
     private EditText distaciaMinima;
+    private TextView distanciaMedida;
     //INTERFACE END
     //  SEEK AUDIO
     private SeekBar seekMusic;
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         urlInput = findViewById(id.urlInput);
         coordenada = findViewById(id.coordenada);
         distaciaMinima = findViewById(id.metros);
+        distanciaMedida = findViewById(id.distanciaMedida);
         seekdistancia = findViewById(id.seekDistancia);
         setListener();
     }
@@ -202,52 +206,64 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                int metros = 0;
+                String metros = "0";
                 switch (progress) {
                     case 0:
-                        metros = 15;
+                        distanciaMedida.setText("m");
+                        metros = "15";
                         break;
                     case 1:
-                        metros = 25;
+                        distanciaMedida.setText("m");
+                        metros = "25";
                         break;
                     case 2:
-                        metros = 50;
+                        distanciaMedida.setText("m");
+                        metros = "50";
                         break;
                     case 3:
-                        metros = 100;
+                        distanciaMedida.setText("m");
+                        metros = "100";
                         break;
                     case 4:
-                        metros = 250;
+                        distanciaMedida.setText("m");
+                        metros = "250";
                         break;
                     case 5:
-                        metros = 500;
+                        distanciaMedida.setText("m");
+                        metros = "500";
                         break;
                     case 6:
-                        metros = 750;
+                        distanciaMedida.setText("m");
+                        metros = "750";
                         break;
                     case 7:
-                        metros = 1000;
+                        distanciaMedida.setText("km");
+                        metros = "1";
                         break;
                     case 8:
-                        metros = 2500;
+                        distanciaMedida.setText("km");
+                        metros = "2.5";
                         break;
                     case 9:
-                        metros = 5000;
+                        distanciaMedida.setText("km");
+                        metros = "5";
                         break;
                     case 10:
-                        metros = 7500;
+                        distanciaMedida.setText("km");
+                        metros = "7.5";
                         break;
                     case 11:
-                        metros = 10000;
+                        distanciaMedida.setText("km");
+                        metros = "10";
                         break;
                     case 12:
-                        metros = 25000;
+                        distanciaMedida.setText("km");
+                        metros = "25";
                         break;
                 }
-                distaciaMinima.setText(String.valueOf(metros));
+                distaciaMinima.setText(metros);
             }
         });
-
     }
 
     public void setCurrentMonumento(Monumento currentMonumento) {
@@ -377,6 +393,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         int i = 0;
         for (Monumento m : monumentosObjectList) {
             visitado.put(m.getIdMonumento(), b);
+            anunciado.put(m.getIdMonumento(), b);
             monumentosObjectList.set(i, m);
             i++;
         }
@@ -511,10 +528,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
         boolean isNotDownloaded = !(new Audio().isDownloaded());
         if (isConnected("wi-fi") && isNotDownloaded) {
+            midiaDownloaded = false;
             MediaPlayer baixando = MediaPlayer.create(this, raw.baixando_dados);
             baixando.start();
             for (Monumento m : monumentosObjectList) {
-                String url = host + "audioDescricao.php?idDocumento=" + m.getIdMonumento();
+                int id = m.getIdMonumento();
+                String url = host + "audioDescricao.php?idDocumento=" + id;
+                audio = new Audio(this, url);
+                url = host + "audioDescricaoNome.php?idDocumento=" + id +"&nome=nome_"+id;
                 audio = new Audio(this, url);
             }
             while (audio.isDownloading() || baixando.isPlaying()) {
@@ -527,6 +548,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             MediaPlayer baixado = MediaPlayer.create(this, raw.dados_baixados);
             baixado.start();
             audio.setDownloaded();
+            midiaDownloaded = true;
         }
     };
     private final Runnable reiniciarVisitados = () -> {
@@ -590,19 +612,33 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 }
                 if (quantidadeVisitados != 0) {
                     coordenada.setText(monumentoMaisProximo.getNome() + "\n à " + (int) (menorDistancia * 1000) + " metros");
-                    int distaciaMinimaInt;
+                    float distaciaMinimaFloat;
                     try {
-                        distaciaMinimaInt = Integer.parseInt(String.valueOf(distaciaMinima.getText()));
+                        float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
+                        distaciaMinimaFloat = (distanciaMedida.getText().equals("km"))?distancia*1000:distancia;
                     } catch (Exception ex) {
-                        distaciaMinimaInt = 0;
+                        distaciaMinimaFloat = 0;
                     }
-                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaInt && Boolean.FALSE.equals(visitado.get(monumentoMaisProximo.getIdMonumento())) && !audio.isPlaying()) {
+                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaFloat && Boolean.FALSE.equals(visitado.get(monumentoMaisProximo.getIdMonumento())) && !audio.isPlaying()) {
                         visitado.put(monumentoMaisProximo.getIdMonumento(), true);
                         monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
                         reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                         setCurrentMonumento(monumentoMaisProximo);
                         setMessage(currentMonumento);
                         coordenada.setText(string.localizando);
+                    } else if (Boolean.FALSE.equals(anunciado.get(monumentoMaisProximo.getIdMonumento())) && midiaDownloaded && !audio.isPlaying()) {
+                        anunciado.put(monumentoMaisProximo.getIdMonumento(), true);
+                        int id = monumentoMaisProximo.getIdMonumento();
+                        audio = new Audio(this, raw.localidade_mais_proxima);
+                        audio.play();
+                        try {
+                            sleep(audio.getDuration());
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        String url = host + "audioDescricaoNome.php?idDocumento=" + id +"&nome=nome_"+id;
+                        audio = new Audio(this,url);
+                        audio.play();
                     }
                 } else {
                     coordenada.setText(string.todos_visitados);
