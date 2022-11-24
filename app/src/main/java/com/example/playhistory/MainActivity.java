@@ -22,6 +22,7 @@ import android.os.StrictMode;
 import android.speech.RecognizerIntent;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -97,6 +98,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private SeekBar seekdistancia;
     //  LISTA
     private ListView monumentosLista;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -271,9 +273,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     }
 
     private void setMessage(Monumento m) {
-        Intent intent = new Intent(this, Messages.class);
-        startActivity(intent);
-        Messages.setDescricao(m.getNome(), m.getDescricao());
+        if (!isAccessibilityEnabled()){
+            Intent intent = new Intent(this, Messages.class);
+            startActivity(intent);
+            Messages.setDescricao(m.getNome(), m.getDescricao());
+        }
     }
 
     public void reproduzirAudioDescricao(String idDocumento) {
@@ -515,6 +519,12 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         if (!noStorage) {
             new Thread(baixarAudioDescricaoDeMonumentos).start();
         }
+    }
+    private boolean isAccessibilityEnabled () {
+        AccessibilityManager am = (AccessibilityManager) getSystemService(ACCESSIBILITY_SERVICE);
+        boolean isAccessibilityEnabled = am.isEnabled();
+        boolean isExploreByTouchEnabled = am.isTouchExplorationEnabled();
+        return isAccessibilityEnabled && isExploreByTouchEnabled;
     }
 
     @SuppressLint("MissingPermission")
