@@ -483,8 +483,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         boolean noLocation = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED;
         boolean noStorage = !(checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED);
         if (noLocation) {
-            audio = new Audio(this, raw.permissoes);
-            audio.play();
+            new Thread(permissoesMsg).start();
             ActivityResultLauncher<String[]> permissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
                         Boolean fineLocationGranted = result.getOrDefault(
                                 Manifest.permission.ACCESS_FINE_LOCATION, false);
@@ -535,6 +534,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     //DEVICE END
 
     //RUNNABLE START
+    private final Runnable permissoesMsg = () -> {
+        try {
+            sleep(tempo.segundo*10);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        audio = new Audio(this, raw.permissoes);
+        audio.play();
+    };
+
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {
         boolean isNotDownloaded = !(new Audio().isDownloaded());
         if (isConnected("wi-fi") && isNotDownloaded) {
@@ -561,6 +570,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             midiaDownloaded = true;
         }
     };
+
     private final Runnable reiniciarVisitados = () -> {
         while (true) {
             setVisitados(false);
