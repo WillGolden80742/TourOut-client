@@ -147,7 +147,10 @@
 
                 <com.google.android.material.floatingactionbutton.FloatingActionButton
                     android:id="@+id/playAudio"
-                    style="@style/play"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginBottom="15dp"
+                    android:backgroundTint="@color/brown_yellow"
+                    android:clickable="true"
                     android:layout_width="match_parent"
                     android:layout_height="55dp"
                     app:srcCompat="@android:drawable/ic_media_play"
