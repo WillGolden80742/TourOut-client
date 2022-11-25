@@ -1,12 +1,12 @@
-package com.example.playhistory.Controller;
-import static com.example.playhistory.Model.ConnectionFactory.isConnected;
+package com.example.tourOut.Controller;
+import static com.example.tourOut.Model.ConnectionFactory.isConnected;
 
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 
-import com.example.playhistory.Model.ConnectionFactory;
+import com.example.tourOut.Model.ConnectionFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,7 +22,7 @@ public class Audio {
     private static final HashMap<String, Boolean> downloading = new HashMap<>();
     private static MediaPlayer mediaPlayer = new MediaPlayer();
     private final String padraoNomeArquivo = "audio_descricao_";
-    private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
+    private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/tourOut/Audio_Descricao/";
     private final String configFile = "config.ini";
     private final String configFilePath = localDeArmazenamento + configFile;
     private ConnectionFactory connection;
