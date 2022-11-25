@@ -1,4 +1,4 @@
-package com.example.tourOut.Controller;
+package com.example.playhistory.Controller;
 
 public class Monumento {
     private int idMonumento;

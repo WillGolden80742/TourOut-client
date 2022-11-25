@@ -1,4 +1,4 @@
-package com.example.tourOut.Model;
+package com.example.playhistory.Model;
 
 import android.content.Context;
 import android.net.ConnectivityManager;

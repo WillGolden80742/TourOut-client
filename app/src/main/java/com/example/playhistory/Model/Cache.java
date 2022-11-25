@@ -1,4 +1,4 @@
-package com.example.tourOut.Model;
+package com.example.playhistory.Model;
 
 import android.os.Environment;
 
@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class Cache extends ConnectionFactory {
 
-    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/tourOut/Cache/";
+    public static final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Cache/";
     private String fileName;
     private final Runnable downloadMidia = () -> {
         writeToFile(fileName, getContentBytes());
