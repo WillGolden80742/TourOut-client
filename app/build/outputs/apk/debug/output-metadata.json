@@ -4,7 +4,7 @@
     "type": "APK",
     "kind": "Directory"
   },
-  "applicationId": "com.example.playhistory",
+  "applicationId": "com.example.tourOut",
   "variantName": "debug",
   "elements": [
     {
