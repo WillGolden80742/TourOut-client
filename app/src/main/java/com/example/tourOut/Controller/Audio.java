@@ -1,12 +1,12 @@
-package com.example.playhistory.Controller;
-import static com.example.playhistory.Model.ConnectionFactory.isConnected;
+package com.example.tourOut.Controller;
+import static com.example.tourOut.Model.ConnectionFactory.isConnected;
 
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Environment;
 
-import com.example.playhistory.Model.ConnectionFactory;
+import com.example.tourOut.Model.ConnectionFactory;
 
 import java.io.BufferedReader;
 import java.io.File;

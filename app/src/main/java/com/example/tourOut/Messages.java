@@ -1,11 +1,11 @@
-package com.example.playhistory;
-import static com.example.playhistory.Model.ConnectionFactory.isConnected;
+package com.example.tourOut;
+import static com.example.tourOut.Model.ConnectionFactory.isConnected;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import com.example.playhistory.Controller.Audio;
-import com.example.playhistory.Controller.Tempo;
+import com.example.tourOut.Controller.Audio;
+import com.example.tourOut.Controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.Locale;
 
