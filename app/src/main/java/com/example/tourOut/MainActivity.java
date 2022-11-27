@@ -7,6 +7,8 @@ import static java.lang.Thread.sleep;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -39,6 +41,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.example.tourOut.Controller.Audio;
 import com.example.tourOut.Controller.Monumento;
 import com.example.tourOut.Controller.Tempo;
@@ -60,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     //SERVIDOR
     private static final String host = "https://desmatamenos.website/";
+    private static final String CHANNEL_ID = "TourOut";
     //AUDIO START
     private static Audio audio = new Audio();
     private static boolean isPlaying = false;
@@ -121,6 +127,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         distanciaMedida = findViewById(id.distanciaMedida);
         seekdistancia = findViewById(id.seekDistancia);
         setListener();
+        createNotificationChannel();
     }
 
     public void setListener() {
@@ -415,6 +422,34 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
 
     //DEVICE START
+
+    private void creaNofication (String title,  String simpleText) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_touourt_logo)
+                .setContentTitle(title)
+                .setContentText(simpleText)
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+        notificationManager.notify(1, builder.build());
+    }
+
+    private void createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = getString(string.channel_name);
+            String description = getString(string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_DEFAULT;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
     private boolean isConnected (String op) {
         op = op.toLowerCase(Locale.ROOT).replace("-","");
         switch (op){
@@ -633,7 +668,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 if (quantidadeVisitados != 0) {
                     boolean isKm = (menorDistancia*1000)>1000;
                     String medida = (isKm)?"quilometros":"metros";
-                    coordenada.setText(monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.2f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida);
+                    String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.4f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida;
+                    coordenada.setText(tourOutMsg);
+                    creaNofication ("Monumento mais próximo", tourOutMsg);
                     float distaciaMinimaFloat;
                     try {
                         float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));

@@ -6,6 +6,9 @@
      <string name="verifique_sua_conexao">Check your internet connection</string>
      <string name="seu_dispositivo_nao_suporta_entrada_de_fala">Your device does not support speech input</string>
      <string name="limpar_pesquisa">Clear search</string>
+     <string name="channel_id">TourOut</string>
+     <string name="channel_name">TourOut</string>
+     <string name="channel_description">TourOut</string>
      <string name="nenhum_monumento_encontrando">No monuments found"</string>
      <string name="nenhum_arquivo_encontrando">No voice file found</string>
      <string name="autorize_localizacao">Authorize Geolocation</string>
