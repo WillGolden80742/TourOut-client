@@ -40,10 +40,6 @@
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".Controller.LocationService"
-            android:foregroundServiceType="location" >
-        </service>
     </application>
 
 </manifest>
