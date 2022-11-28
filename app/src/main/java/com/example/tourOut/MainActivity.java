@@ -423,7 +423,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     //DEVICE START
 
-    private void creaNofication (String title,  String simpleText) {
+    private void creaNotification (String title,  String simpleText) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_touourt_logo)
                 .setContentTitle(title)
@@ -563,6 +563,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     @SuppressLint("MissingPermission")
     public void setLocationManager() {
+        //start foreground service
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
@@ -670,7 +671,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     String medida = (isKm)?"quilometros":"metros";
                     String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.4f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida;
                     coordenada.setText(tourOutMsg);
-                    creaNofication ("Monumento mais próximo", tourOutMsg);
+                    creaNotification ("Localidade mais próxima", tourOutMsg);
                     float distaciaMinimaFloat;
                     try {
                         float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
