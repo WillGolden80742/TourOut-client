@@ -11,9 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Environment;
 import android.os.IBinder;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -21,12 +19,6 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.example.tourOut.R;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 
 public class LocationService extends Service implements LocationListener {
 
@@ -35,13 +27,12 @@ public class LocationService extends Service implements LocationListener {
 
     private boolean stop;
 
-    private static String message = "Localizando...";
+    private static String message;
 
     public void setStop(boolean stop) {
         this.stop = stop;
         if (stop) {
-            int id= android.os.Process.myPid();
-            android.os.Process.killProcess(id);
+            android.os.Process.killProcess(android.os.Process.myPid());
         }
     }
 
@@ -64,10 +55,11 @@ public class LocationService extends Service implements LocationListener {
     public int onStartCommand(Intent intent, int flags, int startId) {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        message = getString(R.string.localizando);
         new Thread(
                 () -> {
                     while (!stop) {
-                        creaNotification("tourOut", message, "lat: " + location.getLatitude() + ", long: " + location.getLongitude());
+                        creaNotification(getString(R.string.localidade_mais_proxima), message, "lat: " + location.getLatitude() + ", long: " + location.getLongitude());
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {

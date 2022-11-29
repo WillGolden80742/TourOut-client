@@ -6,6 +6,8 @@
     <string name="verifique_sua_conexao">Verifique sua conexão com a internet</string>
     <string name="seu_dispositivo_nao_suporta_entrada_de_fala">Seu dispositivo não suporta entrada de fala</string>
     <string name="limpar_pesquisa">Limpar pesquisa</string>
+    <string name="arraste_lista_para_cima">Arraste lista para cima</string>
+    <string name="localidade_mais_proxima">Localidade mais próxima</string>
     <string name="channel_id">TourOut</string>
     <string name="channel_name">TourOut</string>
     <string name="channel_description">TourOut</string>
