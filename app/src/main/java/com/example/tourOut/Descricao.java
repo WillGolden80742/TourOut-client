@@ -48,4 +48,10 @@ public class Descricao extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void onBackPressed() {
+        finish();
+        new Audio().pause();
+    }
 }
