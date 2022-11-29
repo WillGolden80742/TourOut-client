@@ -43,15 +43,19 @@ public class Descricao extends AppCompatActivity {
         pausarDescricao.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finish();
-                new Audio().pause();
+                close();
             }
         });
     }
 
     @Override
     public void onBackPressed() {
+        close();
+    }
+
+    public void close() {
         finish();
         new Audio().pause();
     }
+
 }
