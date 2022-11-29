@@ -45,6 +45,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.example.tourOut.Controller.Audio;
+import com.example.tourOut.Controller.LocationService;
 import com.example.tourOut.Controller.Monumento;
 import com.example.tourOut.Controller.Tempo;
 import com.example.tourOut.Model.Cache;
@@ -61,7 +62,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 @RequiresApi(api = Build.VERSION_CODES.N)
-public class MainActivity extends AppCompatActivity implements LocationListener {
+public class MainActivity extends AppCompatActivity {
 
     //SERVIDOR
     private static final String host = "https://desmatamenos.website/";
@@ -73,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static Monumento currentMonumento;
     private static boolean midiaDownloaded = true;
     //AUDIO END
-    private static boolean initCalc = false;
     //TEMPO
     private final Tempo tempo = new Tempo();
     private final Map<Integer, Boolean> visitado = new HashMap<>();
@@ -86,7 +86,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private Monumento monumentoMaisProximo;
     //CALCULO PROXIMIDADE END
     private int monumentoMaisProximoIndex = 0;
-    private double menorDistancia, currentLat, currentLong;
+    private double menorDistancia;
+    private Thread calculoProximidade;
+    private LocationService locationService = new LocationService();
     //INTERFACE START
     //  PESQUISA
     private SearchView urlInput;
@@ -127,7 +129,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         distanciaMedida = findViewById(id.distanciaMedida);
         seekdistancia = findViewById(id.seekDistancia);
         setListener();
-        createNotificationChannel();
     }
 
     public void setListener() {
@@ -410,45 +411,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-    @Override
-    public void onLocationChanged(@NonNull Location location) {
-        currentLat = location.getLatitude();
-        currentLong = location.getLongitude();
-        if (!initCalc) {
-            new Thread(monumentoMenorDistancia).start();
-            initCalc = true;
-        }
-    }
-
-
     //DEVICE START
-
-    private void creaNotification (String title,  String simpleText) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.mipmap.ic_touourt_logo)
-                .setContentTitle(title)
-                .setContentText(simpleText)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-        notificationManager.notify(1, builder.build());
-    }
-
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = getString(string.channel_name);
-            String description = getString(string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
 
     private boolean isConnected (String op) {
         op = op.toLowerCase(Locale.ROOT).replace("-","");
@@ -564,8 +527,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     @SuppressLint("MissingPermission")
     public void setLocationManager() {
         //start foreground service
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, LocationService.class));
+        } else {
+            startService(new Intent(this, LocationService.class));
+        }
+        calculoProximidade = new Thread(monumentoMenorDistancia);
+        calculoProximidade.start();
     }
     //DEVICE END
 
@@ -653,14 +621,15 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     };
     private final Runnable monumentoMenorDistancia = () -> {
         while (true) {
-            if (monumentosObjectList.size() != 1) {
+            if (monumentosObjectList.size() != 1 && locationService.isIsRunning()) {
                 menorDistancia = 1000000;
                 int index = 0;
                 int quantidadeVisitados = 0;
+                Location l = locationService.getLocation();
                 for (Monumento m : monumentosObjectList) {
                     if (m.getIdMonumento() != 0) {
                         if (Boolean.FALSE.equals(visitado.get(m.getIdMonumento()))) {
-                            calculaDistancia(index, m, currentLat, currentLong);
+                            calculaDistancia(index, m, l.getLatitude(), l.getLongitude());
                             quantidadeVisitados++;
                         }
                     }
@@ -671,7 +640,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                     String medida = (isKm)?"quilometros":"metros";
                     String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.4f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida;
                     coordenada.setText(tourOutMsg);
-                    creaNotification ("Localidade mais próxima", tourOutMsg);
+                    locationService.setMessage(tourOutMsg);
                     float distaciaMinimaFloat;
                     try {
                         float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
