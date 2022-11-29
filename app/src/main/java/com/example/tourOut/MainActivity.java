@@ -7,6 +7,7 @@ import static java.lang.Thread.sleep;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -90,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private double menorDistancia;
     private Thread calculoProximidade;
     private LocationService locationService = new LocationService();
+    private Intent intentService;
     //INTERFACE START
     //  PESQUISA
     private SearchView urlInput;
@@ -114,6 +116,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(layout.activity_main);
         init();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        locationService.setStop(true);
     }
 
     public void init() {
@@ -529,16 +537,27 @@ public class MainActivity extends AppCompatActivity {
     public void setLocationManager() {
         //start overlay service if not started
         try {
+            intentService = new Intent(this, LocationService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(new Intent(this, LocationService.class));
+                startForegroundService(intentService);
             } else {
-                startService(new Intent(this, LocationService.class));
+                startService(intentService);
             }
             calculoProximidade = new Thread(monumentoMenorDistancia);
             calculoProximidade.start();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
     //DEVICE END
 

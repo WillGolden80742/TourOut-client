@@ -23,7 +23,7 @@ public class Audio {
     private static MediaPlayer mediaPlayer = new MediaPlayer();
     private final String padraoNomeArquivo = "audio_descricao_";
     private final String localDeArmazenamento = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS) + "/TourOut/Audio_Descricao/";
-    private final String configFile = "config.ini";
+    private final String configFile = "config.txt";
     private final String configFilePath = localDeArmazenamento + configFile;
     private ConnectionFactory connection;
     private String fileName;

@@ -11,6 +11,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
@@ -20,12 +21,29 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.example.tourOut.R;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+
 public class LocationService extends Service implements LocationListener {
 
     private static final String CHANNEL_ID = "TourOut";
     private static Location location = new Location("TourOut");
 
+    private boolean stop;
+
     private static String message = "Localizando...";
+
+    public void setStop(boolean stop) {
+        this.stop = stop;
+        if (stop) {
+            int id= android.os.Process.myPid();
+            android.os.Process.killProcess(id);
+        }
+    }
 
     public void setMessage(String message) {
         this.message = message;
@@ -48,7 +66,7 @@ public class LocationService extends Service implements LocationListener {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
         new Thread(
                 () -> {
-                    while (true) {
+                    while (!stop) {
                         creaNotification("tourOut", message, "lat: " + location.getLatitude() + ", long: " + location.getLongitude());
                         try {
                             Thread.sleep(1000);
@@ -60,12 +78,6 @@ public class LocationService extends Service implements LocationListener {
         ).start();
         return super.onStartCommand(intent, flags, startId);
     }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
 
     @Override
     public void onCreate () {
