@@ -67,6 +67,9 @@ public class MainActivity extends AppCompatActivity {
     private static Monumento currentMonumento;
     private static boolean midiaDownloaded = true;
     //AUDIO END
+    //PERMISSIONS
+    private Boolean location;
+    private Boolean storage;
     //TEMPO
     private final Tempo tempo = new Tempo();
     private final Map<Integer, Boolean> visitado = new HashMap<>();
@@ -315,6 +318,7 @@ public class MainActivity extends AppCompatActivity {
             cache.setCache(fileName);
             return connection.jsonSearch("Monumentos");
         } else {
+
             return connection.jsonSearchByCache(fileName, "Monumentos");
         }
     }
@@ -412,7 +416,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //DEVICE START
-
     private boolean isConnected (String op) {
         op = op.toLowerCase(Locale.ROOT).replace("-","");
         switch (op){
@@ -491,8 +494,8 @@ public class MainActivity extends AppCompatActivity {
                                 Manifest.permission.WRITE_EXTERNAL_STORAGE, false);
                         Boolean readStorageGranted = result.getOrDefault(
                                 Manifest.permission.READ_EXTERNAL_STORAGE, false);
-                        Boolean location = fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted;
-                        Boolean storage = writeStorageGranted != null && Boolean.TRUE.equals(readStorageGranted);
+                        location = fineLocationGranted != null && fineLocationGranted || coarseLocationGranted != null && coarseLocationGranted;
+                        storage = writeStorageGranted != null && Boolean.TRUE.equals(readStorageGranted);
                         if (location && storage) {
                             setLocationManager();
                             audio.stop();
@@ -509,6 +512,7 @@ public class MainActivity extends AppCompatActivity {
                     Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     Manifest.permission.READ_EXTERNAL_STORAGE
             });
+
 
         } else {
             setLocationManager();
@@ -540,7 +544,6 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
-    
     //DEVICE END
 
     //RUNNABLE START
@@ -550,8 +553,10 @@ public class MainActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        audio = new Audio(this, raw.permissoes);
-        audio.play();
+        if (!location) {
+            audio = new Audio(this, raw.permissoes);
+            audio.play();
+        }
     };
 
     private final Runnable baixarAudioDescricaoDeMonumentos = () -> {

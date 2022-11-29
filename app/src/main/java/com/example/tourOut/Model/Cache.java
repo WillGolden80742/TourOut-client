@@ -29,7 +29,7 @@ public class Cache extends ConnectionFactory {
         super(null);
     }
 
-    public static String getHashMd5(String value) {
+    private static String getHashMd5(String value) {
         MessageDigest md;
         try {
             md = MessageDigest.getInstance("MD5");
@@ -40,7 +40,7 @@ public class Cache extends ConnectionFactory {
         return hash.toString(16);
     }
 
-    public void fileHashed(String fileName) {
+    private void fileHashed(String fileName) {
         String[] fileArr = fileName.split("[.]");
         int lasPosition = fileArr.length - 1;
         this.fileName = getHashMd5(fileName) + "." + fileArr[lasPosition];
@@ -67,7 +67,7 @@ public class Cache extends ConnectionFactory {
         }
     }
 
-    public void writeToFile(String fileName, byte[] content) {
+    private void writeToFile(String fileName, byte[] content) {
         File path = new File(localDeArmazenamento);
         File newDir = new File(String.valueOf(path));
         try {

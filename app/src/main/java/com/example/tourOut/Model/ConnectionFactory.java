@@ -14,11 +14,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class ConnectionFactory {
     private final String url;
@@ -146,9 +149,12 @@ public class ConnectionFactory {
             br.close();
             return jsonSearch(String.valueOf(text), jsonQuery);
         } catch (IOException e) {
+            // return exception
+            e.printStackTrace();
             return jsonSearch(jsonQuery);
         }
     }
+
 
     public static boolean isConnected(Context context) {
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
