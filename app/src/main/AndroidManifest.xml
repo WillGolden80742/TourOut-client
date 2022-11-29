@@ -25,7 +25,7 @@
         android:theme="@style/Theme.PlayHistory"
         tools:targetApi="31">
         <activity
-            android:name=".Messages"
+            android:name=".Descricao"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -40,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".Controller.LocationService" android:foregroundServiceType="location" >
+        <service android:name=".Controller.Coordenadas" android:foregroundServiceType="location" >
         </service>
 
 

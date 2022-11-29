@@ -78,7 +78,7 @@
             android:layout_height="82dp">
 
             <TextView
-                android:id="@+id/coordenada"
+                android:id="@+id/message"
                 android:layout_width="match_parent"
                 android:layout_height="70dp"
                 android:layout_marginStart="0dp"

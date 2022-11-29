@@ -39,7 +39,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.example.tourOut.Controller.Audio;
-import com.example.tourOut.Controller.LocationService;
+import com.example.tourOut.Controller.Coordenadas;
 import com.example.tourOut.Controller.Monumento;
 import com.example.tourOut.Controller.Tempo;
 import com.example.tourOut.Model.Cache;
@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private int monumentoMaisProximoIndex = 0;
     private double menorDistancia;
     private Thread calculoProximidade;
-    private LocationService locationService = new LocationService();
+    private Coordenadas coordenadas = new Coordenadas();
     private Intent intentService;
     //INTERFACE START
     //  PESQUISA
@@ -89,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
     //  PLAYER DE AUDIO
     private FloatingActionButton buttonAudio;
     //  MESSAGEM COORDENADA
-    private TextView coordenada;
+    private TextView message;
     //  DISTANCIA MINIMA
     private EditText distaciaMinima;
     private TextView distanciaMedida;
@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        locationService.setStop(true);
+        coordenadas.setStop(true);
     }
 
     public void init() {
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
         buttonAudio = findViewById(id.playAudio);
         seekMusic = findViewById(id.seekAudio);
         urlInput = findViewById(id.urlInput);
-        coordenada = findViewById(id.coordenada);
+        message = findViewById(id.message);
         distaciaMinima = findViewById(id.metros);
         distanciaMedida = findViewById(id.distanciaMedida);
         seekdistancia = findViewById(id.seekDistancia);
@@ -282,9 +282,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void setMessage(Monumento m) {
         if (!isAccessibilityEnabled()){
-            Intent intent = new Intent(this, Messages.class);
+            Intent intent = new Intent(this, Descricao.class);
             startActivity(intent);
-            Messages.setDescricao(m.getNome(), m.getDescricao());
+            Descricao.setDescricao(m.getNome(), m.getDescricao());
         }
     }
 
@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity {
             audio = new Audio(this, this.currentUrl);
             new Thread(playAudio).start();
         } else {
-            coordenada.setText(string.nenhum_arquivo_encontrando);
+            message.setText(string.nenhum_arquivo_encontrando);
         }
     }
 
@@ -498,7 +498,7 @@ public class MainActivity extends AppCompatActivity {
                             audio.stop();
                             new Thread(baixarAudioDescricaoDeMonumentos).start();
                         } else if (location) {
-                            coordenada.setText(string.autorize_localizacao);
+                            message.setText(string.autorize_localizacao);
                         }
                     }
             );
@@ -528,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
     public void setLocationManager() {
         //start overlay service if not started
         try {
-            intentService = new Intent(this, LocationService.class);
+            intentService = new Intent(this, Coordenadas.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 startForegroundService(intentService);
             } else {
@@ -627,9 +627,11 @@ public class MainActivity extends AppCompatActivity {
     };
     private final Runnable monumentoMenorDistancia = () -> {
         while (true) {
-            Location l = locationService.getLocation();
+            Location l = coordenadas.getLocation();
             try {
-                if (monumentosObjectList.size() != 1 && l.getLatitude() != 0.0 && l.getLongitude() != 0.0) {
+                boolean coordenateFounded = l.getLatitude() != 0.0 && l.getLongitude() != 0.0;
+                boolean dataEnough = monumentosObjectList.size() != 1;
+                if (dataEnough && coordenateFounded) {
                     menorDistancia = 1000000;
                     int index = 0;
                     int quantidadeVisitados = 0;
@@ -646,10 +648,10 @@ public class MainActivity extends AppCompatActivity {
 
                     if (quantidadeVisitados != 0) {
                         boolean isKm = (menorDistancia * 1000) > 1000;
-                        String medida = (isKm) ? "quilometros" : "metros";
-                        String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " + ((isKm) ? String.format("%.4f", menorDistancia) : (int) (menorDistancia * 1000)) + " " + medida;
-                        coordenada.setText(tourOutMsg);
-                        locationService.setMessage(tourOutMsg);
+                        String medida = (isKm) ? "quilômetros" : "metros";
+                        String tourOutMsg = monumentoMaisProximo.getNome() + "\nà " + ((isKm) ? String.format("%.4f", menorDistancia) : (int) (menorDistancia * 1000)) + " " + medida;
+                        message.setText(tourOutMsg);
+                        coordenadas.setMessage(tourOutMsg);
                         float distaciaMinimaFloat;
                         try {
                             float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
@@ -663,7 +665,7 @@ public class MainActivity extends AppCompatActivity {
                             reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
                             setCurrentMonumento(monumentoMaisProximo);
                             setMessage(currentMonumento);
-                            coordenada.setText(string.localizando);
+                            message.setText(string.localizando);
                         } else if (Boolean.FALSE.equals(anunciado.get(monumentoMaisProximo.getIdMonumento())) && midiaDownloaded && !audio.isPlaying()) {
                             anunciado.put(monumentoMaisProximo.getIdMonumento(), true);
                             int id = monumentoMaisProximo.getIdMonumento();
@@ -679,10 +681,12 @@ public class MainActivity extends AppCompatActivity {
                             audio.play();
                         }
                     } else {
-                        coordenada.setText(string.todos_visitados);
+                        message.setText(string.todos_visitados);
                     }
+                } else if (!coordenateFounded) {
+                    message.setText(string.localizando);
                 } else {
-                    coordenada.setText(string.sem_dados);
+                    message.setText(string.sem_dados);
                 }
             } catch (NullPointerException ex) {
                 Log.d("Erro", ex.getMessage());

@@ -9,7 +9,7 @@ import com.example.tourOut.Controller.Tempo;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.Locale;
 
-public class Messages extends AppCompatActivity {
+public class Descricao extends AppCompatActivity {
 
     private static String descricao;
     public Tempo tempo = new Tempo();
@@ -30,13 +30,13 @@ public class Messages extends AppCompatActivity {
     };
 
     public static void setDescricao(String nome, String descricao) {
-        Messages.descricao = nome.toUpperCase(Locale.ROOT) + "\n\n" + descricao;
+        Descricao.descricao = nome.toUpperCase(Locale.ROOT) + "\n\n" + descricao;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_messages);
+        setContentView(R.layout.activity_descricao);
         descricaoTextView = findViewById(R.id.descricao);
         pausarDescricao = findViewById(R.id.pausarDescricao);
         new Thread(runMidia).start();

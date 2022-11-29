@@ -20,7 +20,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.example.tourOut.R;
 
 
-public class LocationService extends Service implements LocationListener {
+public class Coordenadas extends Service implements LocationListener {
 
     private static final String CHANNEL_ID = "TourOut";
     private static Location location = new Location("TourOut");
