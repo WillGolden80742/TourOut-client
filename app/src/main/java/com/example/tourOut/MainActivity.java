@@ -21,8 +21,10 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.Settings;
 import android.speech.RecognizerIntent;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.InputMethodManager;
@@ -66,8 +68,7 @@ public class MainActivity extends AppCompatActivity {
 
     //SERVIDOR
     private static final String host = "https://desmatamenos.website/";
-    private static final String CHANNEL_ID = "TourOut";
-    //AUDIO START
+    // AUDIO START
     private static Audio audio = new Audio();
     private static boolean isPlaying = false;
     private static List<Monumento> monumentosObjectList = new ArrayList<>();
@@ -526,14 +527,18 @@ public class MainActivity extends AppCompatActivity {
 
     @SuppressLint("MissingPermission")
     public void setLocationManager() {
-        //start foreground service
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(new Intent(this, LocationService.class));
-        } else {
-            startService(new Intent(this, LocationService.class));
+        //start overlay service if not started
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(new Intent(this, LocationService.class));
+            } else {
+                startService(new Intent(this, LocationService.class));
+            }
+            calculoProximidade = new Thread(monumentoMenorDistancia);
+            calculoProximidade.start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        calculoProximidade = new Thread(monumentoMenorDistancia);
-        calculoProximidade.start();
     }
     //DEVICE END
 
@@ -621,59 +626,65 @@ public class MainActivity extends AppCompatActivity {
     };
     private final Runnable monumentoMenorDistancia = () -> {
         while (true) {
-            if (monumentosObjectList.size() != 1 && locationService.isIsRunning()) {
-                menorDistancia = 1000000;
-                int index = 0;
-                int quantidadeVisitados = 0;
-                Location l = locationService.getLocation();
-                for (Monumento m : monumentosObjectList) {
-                    if (m.getIdMonumento() != 0) {
-                        if (Boolean.FALSE.equals(visitado.get(m.getIdMonumento()))) {
-                            calculaDistancia(index, m, l.getLatitude(), l.getLongitude());
-                            quantidadeVisitados++;
+            Location l = locationService.getLocation();
+            try {
+                if (monumentosObjectList.size() != 1 && l.getLatitude() != 0.0 && l.getLongitude() != 0.0) {
+                    menorDistancia = 1000000;
+                    int index = 0;
+                    int quantidadeVisitados = 0;
+
+                    for (Monumento m : monumentosObjectList) {
+                        if (m.getIdMonumento() != 0) {
+                            if (Boolean.FALSE.equals(visitado.get(m.getIdMonumento()))) {
+                                calculaDistancia(index, m, l.getLatitude(), l.getLongitude());
+                                quantidadeVisitados++;
+                            }
                         }
+                        index++;
                     }
-                    index++;
-                }
-                if (quantidadeVisitados != 0) {
-                    boolean isKm = (menorDistancia*1000)>1000;
-                    String medida = (isKm)?"quilometros":"metros";
-                    String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " +  ((isKm)?String.format("%.4f",menorDistancia):(int)(menorDistancia*1000))+ " "+medida;
-                    coordenada.setText(tourOutMsg);
-                    locationService.setMessage(tourOutMsg);
-                    float distaciaMinimaFloat;
-                    try {
-                        float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
-                        distaciaMinimaFloat = (distanciaMedida.getText().equals("km"))?distancia*1000:distancia;
-                    } catch (Exception ex) {
-                        distaciaMinimaFloat = 0;
-                    }
-                    if (((int) (menorDistancia * 1000)) <= distaciaMinimaFloat && Boolean.FALSE.equals(visitado.get(monumentoMaisProximo.getIdMonumento())) && !audio.isPlaying()) {
-                        visitado.put(monumentoMaisProximo.getIdMonumento(), true);
-                        monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
-                        reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
-                        setCurrentMonumento(monumentoMaisProximo);
-                        setMessage(currentMonumento);
-                        coordenada.setText(string.localizando);
-                    } else if (Boolean.FALSE.equals(anunciado.get(monumentoMaisProximo.getIdMonumento())) && midiaDownloaded && !audio.isPlaying()) {
-                        anunciado.put(monumentoMaisProximo.getIdMonumento(), true);
-                        int id = monumentoMaisProximo.getIdMonumento();
-                        audio = new Audio(this, raw.localidade_mais_proxima);
-                        audio.play();
+
+                    if (quantidadeVisitados != 0) {
+                        boolean isKm = (menorDistancia * 1000) > 1000;
+                        String medida = (isKm) ? "quilometros" : "metros";
+                        String tourOutMsg = monumentoMaisProximo.getNome() + "\n à " + ((isKm) ? String.format("%.4f", menorDistancia) : (int) (menorDistancia * 1000)) + " " + medida;
+                        coordenada.setText(tourOutMsg);
+                        locationService.setMessage(tourOutMsg);
+                        float distaciaMinimaFloat;
                         try {
-                            sleep(audio.getDuration());
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+                            float distancia = Float.parseFloat(String.valueOf(distaciaMinima.getText()));
+                            distaciaMinimaFloat = (distanciaMedida.getText().equals("km")) ? distancia * 1000 : distancia;
+                        } catch (Exception ex) {
+                            distaciaMinimaFloat = 0;
                         }
-                        String url = host + "audioDescricaoNome.php?idDocumento=" + id +"&nome=nome_"+id;
-                        audio = new Audio(this,url);
-                        audio.play();
+                        if (((int) (menorDistancia * 1000)) <= distaciaMinimaFloat && Boolean.FALSE.equals(visitado.get(monumentoMaisProximo.getIdMonumento())) && !audio.isPlaying()) {
+                            visitado.put(monumentoMaisProximo.getIdMonumento(), true);
+                            monumentosObjectList.set(monumentoMaisProximoIndex, monumentoMaisProximo);
+                            reproduzirAudioDescricao(String.valueOf(monumentoMaisProximo.getIdMonumento()));
+                            setCurrentMonumento(monumentoMaisProximo);
+                            setMessage(currentMonumento);
+                            coordenada.setText(string.localizando);
+                        } else if (Boolean.FALSE.equals(anunciado.get(monumentoMaisProximo.getIdMonumento())) && midiaDownloaded && !audio.isPlaying()) {
+                            anunciado.put(monumentoMaisProximo.getIdMonumento(), true);
+                            int id = monumentoMaisProximo.getIdMonumento();
+                            audio = new Audio(this, raw.localidade_mais_proxima);
+                            audio.play();
+                            try {
+                                sleep(audio.getDuration());
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            String url = host + "audioDescricaoNome.php?idDocumento=" + id + "&nome=nome_" + id;
+                            audio = new Audio(this, url);
+                            audio.play();
+                        }
+                    } else {
+                        coordenada.setText(string.todos_visitados);
                     }
                 } else {
-                    coordenada.setText(string.todos_visitados);
+                    coordenada.setText(string.sem_dados);
                 }
-            } else {
-                coordenada.setText(string.sem_dados);
+            } catch (NullPointerException ex) {
+                Log.d("Erro", ex.getMessage());
             }
             try {
                 sleep(tempo.segundo * 10);

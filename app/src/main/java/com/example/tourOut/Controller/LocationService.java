@@ -1,12 +1,16 @@
 package com.example.tourOut.Controller;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.IBinder;
 
 import androidx.annotation.NonNull;
@@ -20,19 +24,11 @@ public class LocationService extends Service implements LocationListener {
 
     private static final String CHANNEL_ID = "TourOut";
     private static Location location = new Location("TourOut");
-    private static boolean isRunning = false;
+
     private static String message = "Localizando...";
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public static boolean isIsRunning() {
-        return isRunning;
-    }
-
-    public static void setIsRunning(boolean isRunning) {
-        LocationService.isRunning = isRunning;
     }
 
     public static Location getLocation() {
@@ -53,7 +49,7 @@ public class LocationService extends Service implements LocationListener {
         new Thread(
                 () -> {
                     while (true) {
-                        creaNotification("tourOut", message,"lat: "+location.getLatitude() + ", long: " + location.getLongitude());
+                        creaNotification("tourOut", message, "lat: " + location.getLatitude() + ", long: " + location.getLongitude());
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -63,6 +59,32 @@ public class LocationService extends Service implements LocationListener {
                 }
         ).start();
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+
+    @Override
+    public void onCreate () {
+        super.onCreate();
+
+        if (Build.VERSION.SDK_INT >= 26) {
+
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                    "Channel human readable title",
+                    NotificationManager.IMPORTANCE_DEFAULT);
+
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("")
+                    .setContentText("").build();
+
+            startForeground(1, notification);
+        }
     }
 
     private void creaNotification (String title,  String simpleText, String subText) {
@@ -78,11 +100,10 @@ public class LocationService extends Service implements LocationListener {
     }
 
 
+
+
     @Override
     public void onLocationChanged(@NonNull Location location) {
-        if (!isIsRunning()) {
-            setIsRunning(true);
-        }
         this.location = location;
     }
 
