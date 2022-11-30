@@ -68,8 +68,8 @@ public class MainActivity extends AppCompatActivity {
     private static boolean midiaDownloaded = true;
     //AUDIO END
     //PERMISSIONS
-    private Boolean location;
-    private Boolean storage;
+    private boolean location;
+    private boolean storage;
     //TEMPO
     private final Tempo tempo = new Tempo();
     private final Map<Integer, Boolean> visitado = new HashMap<>();
