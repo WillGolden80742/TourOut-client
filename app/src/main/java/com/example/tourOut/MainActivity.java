@@ -37,7 +37,6 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-
 import com.example.tourOut.Controller.Audio;
 import com.example.tourOut.Controller.Coordenadas;
 import com.example.tourOut.Controller.Monumento;
