@@ -1,40 +1,40 @@
-# Aplicativo Guia Turístico para Deficientes Visuais
+# Tourist Guide App for Visually Impaired
 
-Este repositório contém o código cliente do aplicativo "Guia Turístico para Deficientes Visuais".
+This repository contains the client code for the "Tourist Guide for Visually Impaired" application.
 
-## Sobre o Projeto
+## About the Project
 
-O objetivo deste aplicativo é auxiliar e orientar pessoas com deficiência visual em ambientes culturais e turísticos, informando-os sobre pontos de interesse próximos como monumentos, estátuas e locais históricos.
+The purpose of this application is to assist and guide individuals with visual impairments in cultural and tourist environments, providing information about nearby points of interest such as monuments, statues, and historical sites.
 
-O aplicativo foi desenvolvido como trabalho acadêmico para estudar formas de promover inclusão e acessibilidade para deficientes visuais.
+The application was developed as an academic project to explore ways of promoting inclusion and accessibility for visually impaired individuals.
 
-## Funcionalidades
+## Features
 
-- Geolocalização do usuário
-- Cálculo de distância até pontos turísticos próximos
-- Anúncio por áudio quando o usuário se aproxima de um ponto de interesse
-- Busca textual ou por voz dos pontos turísticos
-- Descrição em áudio dos pontos de interesse
-- Controle do player de áudio com botões e seekbar
+- User geolocation
+- Calculation of distance to nearby tourist attractions
+- Audio announcements when the user approaches a point of interest
+- Text or voice search for tourist attractions
+- Audio descriptions of points of interest
+- Audio player control with buttons and seekbar
 
-## Tecnologias Utilizadas
+## Technologies Used
 
-- Linguagem Java
+- Java programming language
 - Android SDK
-- APIs de Geolocalização e Acessibilidade
-- Recognizer Intent para reconhecimento de voz 
-- Comunicação com webservice PHP e banco de dados para busca de pontos turísticos
+- Geolocation and Accessibility APIs
+- Recognizer Intent for voice recognition
+- Communication with PHP web service and database for tourist point search
 
-## Como Usar
+## How to Use
 
-O aplicativo necessita das permissões de localização e armazenamento. Após concedê-las, ele começará a monitorar a localização do usuário e anunciar por áudio quando algum ponto turístico próximo for detectado.
+The application requires location and storage permissions. After granting them, it will begin monitoring the user's location and announce audio information when a nearby tourist attraction is detected.
 
-O usuário também pode realizar buscas textuais ou por voz para procurar locais de interesse. Ao selecionar um item da lista, uma descrição em áudio será reproduzida.
+Users can also perform text or voice searches to find places of interest. Upon selecting an item from the list, an audio description will be played.
 
-O player de áudio possui controles de play/pause e seekbar para navegação.
+The audio player includes play/pause controls and a seekbar for navigation.
 
-O aplicativo foi desenvolvido visando total acessibilidade para usuários com deficiência visual.
+The application was developed with complete accessibility for visually impaired users in mind.
 
-## Licença
+## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
