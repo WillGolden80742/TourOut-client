@@ -34,3 +34,7 @@ O usuário também pode realizar buscas textuais ou por voz para procurar locais
 O player de áudio possui controles de play/pause e seekbar para navegação.
 
 O aplicativo foi desenvolvido visando total acessibilidade para usuários com deficiência visual.
+
+## Licença
+
+[MIT](https://choosealicense.com/licenses/mit/)
