@@ -1,5 +1,3 @@
-Aqui está um exemplo de readme.md para a parte do cliente do aplicativo descrito no código e resumo fornecidos:
-
 # Aplicativo Guia Turístico para Deficientes Visuais
 
 Este repositório contém o código cliente do aplicativo "Guia Turístico para Deficientes Visuais".
