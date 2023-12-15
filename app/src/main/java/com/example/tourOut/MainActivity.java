@@ -58,7 +58,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MainActivity extends AppCompatActivity {
 
     //SERVIDOR
-    private static final String host = "https://desmatamenos.website/";
+    private static final String host = "https://twoleafchat.site/TourOut/";
     // AUDIO START
     private static Audio audio = new Audio();
     private static boolean isPlaying = false;
@@ -143,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
                 inserirMonumentos();
                 setVisitados(false);
             } else {
+                visitado.put(idMonumento,true);
                 setCurrentMonumento(monumentosObjectList.get(itemPosition));
                 reproduzirAudioDescricao(String.valueOf(idMonumento));
                 setMessage(currentMonumento);
