@@ -136,14 +136,15 @@ public class MainActivity extends AppCompatActivity {
     public void setListener() {
         buttonAudio.setOnClickListener(view -> new Thread(playAudio).start());
         monumentosLista.setOnItemClickListener((listView, itemView, itemPosition, itemId) -> {
-            int idMonumento = monumentosObjectList.get(itemPosition).getIdMonumento();
+            Monumento monumento =  monumentosObjectList.get(itemPosition);
+            int idMonumento = monumento.getIdMonumento();
             if (idMonumento == 0) {
                 urlInput.setQuery("", false);
                 urlInput.clearFocus();
                 inserirMonumentos();
                 setVisitados(false);
             } else {
-                visitado.put(idMonumento,true);
+                setVisitado(monumento,true);
                 setCurrentMonumento(monumentosObjectList.get(itemPosition));
                 reproduzirAudioDescricao(String.valueOf(idMonumento));
                 setMessage(currentMonumento);
@@ -406,13 +407,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setVisitados(boolean b) {
-        int i = 0;
         for (Monumento m : monumentosObjectList) {
-            visitado.put(m.getIdMonumento(), b);
-            anunciado.put(m.getIdMonumento(), b);
-            monumentosObjectList.set(i, m);
-            i++;
+            setVisitado(m, b);
         }
+    }
+
+    private void setVisitado(Monumento monumento, boolean b) {
+        int idMonumento = monumento.getIdMonumento();
+        visitado.put(idMonumento, b);
+        anunciado.put(idMonumento, b);
+        monumentosObjectList.set(monumentosObjectList.indexOf(monumento), monumento);
     }
 
     //DEVICE START
